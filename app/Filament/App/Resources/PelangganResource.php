@@ -78,7 +78,8 @@ class PelangganResource extends Resource
                                     ->required()
                                     ->placeholder('Masukkan email'),
                                 Forms\Components\Placeholder::make('transaksi_terakhir')
-                                    ->label('Transaksi Terakhir'),
+                                    ->label('Transaksi Terakhir')
+                                    ->content(fn($record) => $record->transaksi_terakhir ? $record->transaksi_terakhir->format('d F Y H:i:s') : '-'),
                             ])->columns(2),
                     ])->columns(2)
             ]);

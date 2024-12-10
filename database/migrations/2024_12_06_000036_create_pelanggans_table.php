@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('alamat');
             $table->string('no_telp');
             $table->string('email');
-            $table->json('transaksi_terakhir')->nullable();
+            $table->timestamp('transaksi_terakhir')->nullable(); 
             $table->timestamps();
         });
     }

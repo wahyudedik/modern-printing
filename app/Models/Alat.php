@@ -31,7 +31,7 @@ class Alat extends BaseModel
             'aktif' => 'success',
             'maintenance' => 'warning',
             'rusak' => 'danger',
-        ][$this->status] ?? 'secondary';
+        ][$this->status] ?? 'secondary'; 
     }
 
     public function scopeAktif($query)

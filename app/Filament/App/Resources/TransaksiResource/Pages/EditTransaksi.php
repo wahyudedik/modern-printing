@@ -14,6 +14,11 @@ class EditTransaksi extends EditRecord
     {
         return [
             Actions\DeleteAction::make(),
+            Actions\Action::make('print')
+                ->label('Print')
+                ->icon('heroicon-o-printer')
+                ->url(fn($record) => route('transaksi.print', $record))
+                ->openUrlInNewTab(),
         ];
     }
 }

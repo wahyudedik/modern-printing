@@ -19,8 +19,6 @@ return new class extends Migration
             $table->string('slug');
             $table->text('deskripsi');
             $table->string('kategori');
-            $table->json('bahan')->nullable();
-            $table->json('alat')->nullable();
             $table->string('harga');
             $table->string('diskon')->nullable();
             $table->string('minimal_qty');

@@ -27,31 +27,60 @@ class VendorResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->placeholder('Enter vendor name')
+                    ->label('Vendor Name')
+                    ->columnSpan('full'),
                 Forms\Components\TextInput::make('email')
                     ->email()
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->placeholder('Enter email address')
+                    ->label('Email Address')
+                    ->columnSpan('full'),
                 Forms\Components\TextInput::make('website')
                     ->url()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('address')
+                    ->maxLength(255)
+                    ->placeholder('https://example.com')
+                    ->label('Website URL')
+                    ->columnSpan('full'),
+                Forms\Components\Textarea::make('address')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->placeholder('Enter complete address')
+                    ->label('Complete Address')
+                    ->columnSpan('full')
+                    ->rows(3),
                 Forms\Components\TextInput::make('phone')
                     ->tel()
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->placeholder('Enter phone number')
+                    ->label('Phone Number')
+                    ->columnSpan('full'),
                 Forms\Components\FileUpload::make('logo')
                     ->image()
-                    ->directory('vendor-logos'),
+                    ->directory('vendor-logos')
+                    ->label('Company Logo')
+                    ->imagePreviewHeight('150')
+                    ->loadingIndicatorPosition('left')
+                    ->panelAspectRatio('2:1')
+                    ->panelLayout('integrated')
+                    ->removeUploadedFileButtonPosition('right')
+                    ->uploadButtonPosition('left')
+                    ->uploadProgressIndicatorPosition('left')
+                    ->columnSpan('full'),
                 Forms\Components\Select::make('status')
                     ->options([
                         'active' => 'Active',
                         'inactive' => 'Inactive',
                     ])
                     ->default('active')
-                    ->required(),
+                    ->required()
+                    ->label('Vendor Status')
+                    ->native(false)
+                    ->searchable()
+                    ->columnSpan('full'),
             ]);
     }
 
@@ -60,28 +89,40 @@ class VendorResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->copyable(),
                 Tables\Columns\TextColumn::make('email')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->copyable()
+                    ->icon('heroicon-o-envelope'),
                 Tables\Columns\TextColumn::make('website')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->copyable()
+                    ->url(fn($record) => $record->website, true)
+                    ->icon('heroicon-o-globe-alt'),
                 Tables\Columns\TextColumn::make('address')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->icon('heroicon-o-map-pin'),
                 Tables\Columns\TextColumn::make('phone')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->copyable()
+                    ->icon('heroicon-o-phone'),
                 Tables\Columns\SelectColumn::make('status')
                     ->options([
                         'active' => 'Active',
                         'inactive' => 'Inactive',
                     ]),
-                Tables\Columns\IconColumn::make('website')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-x-circle'),
-                Tables\Columns\IconColumn::make('logo')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-x-circle'),
+                Tables\Columns\ImageColumn::make('logo')
+                    ->circular()
+                    ->defaultImageUrl(url('/images/placeholder.png'))
+                    ->size(40),
             ])->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -106,6 +147,16 @@ class VendorResource extends Resource
     {
         return [
             'index' => Pages\ManageVendors::route('/'),
+            'view' => Pages\ViewVendor::route('/{record}'),
         ];
     }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\ProdukRelationManager::class,
+            RelationManagers\TransaksiRelationManager::class,
+        ];
+    }
+
 }

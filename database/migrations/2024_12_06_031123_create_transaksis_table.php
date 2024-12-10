@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transaksis', function (Blueprint $table) {
+        Schema::create('transaksis', function (Blueprint $table) { 
             $table->id();
             $table->foreignId('vendor_id')->constrained()->cascadeOnDelete();
-            $table->json('data_pelanggan')->nullable();
-            $table->json('data_produk')->nullable();
-            $table->string('minimal_qty')->nullable();
-            $table->string('total_qty')->nullable();
-            $table->string('total_harga')->nullable();
+            $table->string('kode')->unique();
+            $table->integer('total_qty')->nullable();
+            $table->decimal('total_harga', 10, 2)->nullable();
             $table->enum('metode_pembayaran', ['transfer', 'cash', 'qris'])->nullable();
             $table->enum('status', ['pending', 'success', 'failed'])->default('pending');
             $table->timestamps();

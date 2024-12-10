@@ -32,6 +32,10 @@ class AppPanelProvider extends PanelProvider
         return $panel
             ->id('app')
             ->path('app')
+            ->brandName('Modern Printing')
+            // ->brandLogo(asset('home/assets/img/1-removebg.png'),)
+            ->brandLogoHeight('2rem')
+            ->favicon(asset('img/favicon.png'))
             ->profile()
             ->colors([
                 'primary' => Color::Red,
@@ -70,10 +74,10 @@ class AppPanelProvider extends PanelProvider
             ->tenantProfile(EditTeamProfile::class)
             ->tenantMenuItems([
                 'register' => MenuItem::make()
-                    ->label('Register new team')
+                    ->label('Register new vendor')
                     ->visible(fn() => Auth::user()->usertype === 'user' ||  Auth::user()->usertype === 'admin'),
                 'profile' => MenuItem::make()
-                    ->label('Edit team profile')
+                    ->label('Edit vendor profile')
                     ->visible(fn() => Auth::user()->usertype === 'user' ||  Auth::user()->usertype === 'admin'),
                 // MenuItem::make()
                 //     ->label('Settings')

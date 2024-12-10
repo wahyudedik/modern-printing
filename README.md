@@ -26,3 +26,12 @@ list :
 - [x] 14. install filament themes
 - [x] 15. panel app resource user
 - [x] 16. panel app resource role
+- [x] 17. panel app resource permission
+- [x] 18. Resource bahan dan alat
+- [x] 19. Resource produk
+- [x] 20. Resource pelanggan
+- [x] 21. Resource transaksi
+- [x] 22. Resource POS
+- [x] 23. Dashboard app
+- [x] 24. Dashboard admin
+- [x] 25. Relasi Vendor

@@ -21,7 +21,7 @@ class Bahan extends BaseModel
         'is_active' => 'boolean',
         'spesifikasi' => 'array',
     ];
-
+ 
     public function vendor()
     {
         return $this->belongsTo(Vendor::class, 'vendor_id');

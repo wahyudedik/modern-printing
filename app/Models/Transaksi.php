@@ -10,8 +10,7 @@ class Transaksi extends BaseModel
 
     protected $fillable = [
         'vendor_id',
-        'data_pelanggan',
-        'data_produk',
+        'kode',
         'minimal_qty',
         'total_qty',
         'total_harga',
@@ -20,11 +19,9 @@ class Transaksi extends BaseModel
     ];
 
     protected $casts = [
-        'data_pelanggan' => 'array',
-        'data_produk' => 'array',
-        'minimal_qty' => 'string',
-        'total_qty' => 'string',
-        'total_harga' => 'string',
+        'minimal_qty' => 'integer', 
+        'total_qty' => 'integer',
+        'total_harga' => 'decimal:2',
         'metode_pembayaran' => 'string',
         'status' => 'string'
     ];
@@ -80,5 +77,18 @@ class Transaksi extends BaseModel
     public function scopeQris($query)
     {
         return $query->where('metode_pembayaran', 'qris');
+    }
+
+    public function produk()
+    {
+        return $this->belongsToMany(Produk::class, 'transaksi_produk', 'transaksi_id', 'produk_id')
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
+    public function pelanggan()
+    {
+        return $this->belongsToMany(Pelanggan::class, 'transaksi_pelanggan', 'transaksi_id', 'pelanggan_id')
+            ->withTimestamps();
     }
 }
