@@ -76,4 +76,9 @@ class Vendor extends Model implements HasAvatar
         return $this->hasMany(Transaksi::class, 'vendor_id');
     }
 
+    public function vendor()
+    {
+        return $this->hasMany(Role::class, 'vendor_id');
+    }
+
 }
