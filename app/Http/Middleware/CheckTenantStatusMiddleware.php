@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\Vendor;
 
 class CheckTenantStatusMiddleware
 {
@@ -17,7 +18,7 @@ class CheckTenantStatusMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
-        $vendor = filament()->getTenant();
+        $vendor = Vendor::where('id', $user->id)->first();
 
         if ($vendor?->status === 'inactive') {
             if ($request->expectsJson()) {
