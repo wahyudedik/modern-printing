@@ -11,7 +11,12 @@ Route::get('/', function () {
 
 Route::get('/account/inactive', function () {
     return view('account.inactive');
-})->name('account.inactive');
+})
+    ->name('account.inactive')
+    ->middleware([
+        Authenticate::class . ':app',
+        ApplyTenantScopes::class
+    ]);
 
 Route::get('/transaksi/print/{record}', function ($record) {
     return view('transaksi.print', compact('record'));
