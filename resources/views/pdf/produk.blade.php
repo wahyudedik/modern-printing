@@ -101,12 +101,6 @@
             background: #e9ecef;
         }
 
-        .price-highlight {
-            color: #dc3545;
-            font-size: 24px;
-            font-weight: 700;
-        }
-
         .footer {
             margin-top: 40px;
             text-align: center;
@@ -154,55 +148,13 @@
                 </div>
 
                 <div class="info-item">
-                    <div class="info-label">Bahan</div>
-                    <div class="info-value">
-                        @if (isset($produk['bahan']) && !empty($produk['bahan']))
-                            @foreach ($produk['bahan'] as $bahan)
-                                <span class="badge">{{ $bahan['nama_bahan'] }}</span>
-                            @endforeach
-                        @else
-                            <span>-</span>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">Alat</div>
-                    <div class="info-value">
-                        @if (isset($produk['alat']) && !empty($produk['alat']))
-                            @foreach ($produk['alat'] as $alat)
-                                <span class="badge">{{ $alat['nama_alat'] }}</span>
-                            @endforeach
-                        @else
-                            <span>-</span>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">Harga Normal</div>
-                    <div class="info-value">Rp {{ number_format($produk['harga'], 0, ',', '.') }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">Diskon</div>
-                    <div class="info-value">Rp {{ number_format($produk['diskon'], 0, ',', '.') }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">Harga Akhir</div>
-                    <div class="info-value price-highlight">Rp {{ number_format($produk['total_harga'], 0, ',', '.') }}
-                    </div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">Stok</div>
-                    <div class="info-value">{{ $produk['stok'] }} unit</div>
-                </div>
-
-                <div class="info-item">
                     <div class="info-label">Deskripsi</div>
                     <div class="info-value">{!! $produk['deskripsi'] !!}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">Vendor</div>
+                    <div class="info-value">{{ $produk['vendor']['name'] }}</div>
                 </div>
             </div>
         </div>

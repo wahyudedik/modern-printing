@@ -63,12 +63,13 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         }
 
         if ($panel->getId() === 'app') {
-            return $this->usertype === 'user' || $this->usertype === 'admin' || $this->usertype === 'staff';
+            return ($this->usertype === 'user' || $this->usertype === 'admin' || $this->usertype === 'staff');
+                // && $this->is_active === true;
         }
 
         return false;
     }
-
+    
     public function vendor(): BelongsToMany
     {
         return $this->belongsToMany(Vendor::class);
@@ -87,5 +88,10 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function vendorActivities()
     {
         return $this->hasMany(VendorActivity::class, 'user_id');
+    }
+
+    public function transaksi()
+    {
+        return $this->hasMany(Transaksi::class, 'user_id');
     }
 }

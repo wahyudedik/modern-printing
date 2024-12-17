@@ -11,18 +11,14 @@ class Transaksi extends BaseModel
     protected $fillable = [
         'vendor_id',
         'kode',
-        'minimal_qty',
-        'total_qty',
-        'total_harga',
-        'metode_pembayaran',
+        'user_id',
+        'pelanggan_id',
+        'total_price',
         'status'
     ];
 
     protected $casts = [
-        'minimal_qty' => 'integer', 
-        'total_qty' => 'integer',
-        'total_harga' => 'decimal:2',
-        'metode_pembayaran' => 'string',
+        'total_price' => 'decimal:2',
         'status' => 'string'
     ];
 
@@ -31,64 +27,18 @@ class Transaksi extends BaseModel
         return $this->belongsTo(Vendor::class, 'vendor_id');
     }
 
-    public function getStatusColorAttribute()
+    public function user()
     {
-        return [
-            'pending' => 'warning',
-            'success' => 'success',
-            'failed' => 'danger',
-        ][$this->status] ?? 'secondary';
+        return $this->belongsTo(User::class, 'user_id');
     }
-
-    public function getMetodePembayaranLabelAttribute()
-    {
-        return [
-            'cash' => 'Cash',
-            'transfer' => 'Transfer',
-            'qris' => 'QRIS',
-        ][$this->metode_pembayaran] ?? '-';
-    }
-
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
-    }
-
-    public function scopeSuccess($query)
-    {
-        return $query->where('status', 'success');
-    }
-
-    public function scopeFailed($query)
-    {
-        return $query->where('status', 'failed');
-    }
-
-    public function scopeCash($query)
-    {
-        return $query->where('metode_pembayaran', 'cash');
-    }
-
-    public function scopeTransfer($query)
-    {
-        return $query->where('metode_pembayaran', 'transfer');
-    }
-
-    public function scopeQris($query)
-    {
-        return $query->where('metode_pembayaran', 'qris');
-    }
-
-    public function produk()
-    {
-        return $this->belongsToMany(Produk::class, 'transaksi_produk', 'transaksi_id', 'produk_id')
-            ->withPivot('quantity')
-            ->withTimestamps();
-    }
-
+    
     public function pelanggan()
     {
-        return $this->belongsToMany(Pelanggan::class, 'transaksi_pelanggan', 'transaksi_id', 'pelanggan_id')
-            ->withTimestamps();
+        return $this->belongsTo(Pelanggan::class, 'pelanggan_id');
+    }
+
+    public function transaksiItem()
+    {
+        return $this->hasMany(TransaksiItem::class, 'transaksi_id');
     }
 }

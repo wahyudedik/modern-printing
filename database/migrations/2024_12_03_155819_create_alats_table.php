@@ -21,7 +21,7 @@ return new class extends Migration
             $table->enum('status', ['aktif', 'maintenance', 'rusak']);
             $table->date('tanggal_pembelian');
             $table->integer('kapasitas_cetak_per_jam');
-            $table->text('keterangan')->nullable();
+            $table->string('tersedia')->nullable();
             $table->timestamps();
         });
     }

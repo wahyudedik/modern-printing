@@ -13,10 +13,12 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Concerns\InteractsWithTable;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 
 class Laporan extends Page implements HasTable
 {
     use InteractsWithTable;
+    use HasPageShield;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'Laporan';

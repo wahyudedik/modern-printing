@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\TransaksiResource\Pages;
 use App\Filament\App\Resources\TransaksiResource\RelationManagers;
+use App\Filament\App\Resources\TransaksiResource\RelationManagers\TransaksiItemRelationManager;
 
 class TransaksiResource extends Resource
 {
@@ -51,131 +52,49 @@ class TransaksiResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('Informasi Transaksi')
+                    ->description('Masukkan informasi transaksi dengan benar')
                     ->schema([
-                        Forms\Components\TextInput::make('kode')
-                            ->required()
-                            ->unique(ignoreRecord: true)
-                            ->default(function () {
-                                return 'TRX-' . now()->format('YmdHis') . '-' . Auth::user()->id;
-                            })
-                            ->disabled()
-                            ->dehydrated()
-                            ->placeholder('Kode pelanggan akan dibuat otomatis'),
                         Forms\Components\Group::make()
                             ->schema([
-                                Forms\Components\Select::make('data_pelanggan')
-                                    ->label('Data Pelanggan')
+                                Forms\Components\TextInput::make('kode')
+                                    ->label('Kode Transaksi')
+                                    ->required()
+                                    ->unique(ignoreRecord: true)
+                                    ->readOnly()
+                                    ->default('TRX-' . strtoupper(uniqid())),
+                                Forms\Components\Select::make('user_id')
+                                    ->label('User')
+                                    ->relationship('user', 'name')
+                                    ->required()
+                                    ->searchable()
+                                    ->preload(),
+                                Forms\Components\Select::make('pelanggan_id')
+                                    ->label('Pelanggan')
                                     ->relationship('pelanggan', 'nama')
-                                    ->preload()
                                     ->required()
                                     ->searchable()
-                                    ->createOptionForm([
-                                        Forms\Components\Hidden::make('vendor_id')
-                                            ->default(Filament::getTenant()->id),
-                                        Forms\Components\TextInput::make('nama')
-                                            ->required(),
-                                        Forms\Components\TextInput::make('no_telp')
-                                            ->tel()
-                                            ->numeric()
-                                            ->required(),
-                                        Forms\Components\TextInput::make('alamat')
-                                            ->required(),
-                                        Forms\Components\TextInput::make('email')
-                                            ->required()
-                                            ->email(),
-                                        Forms\Components\TextInput::make('kode')
-                                            ->required()
-                                            ->unique(ignoreRecord: true)
-                                            ->default(function () {
-                                                return 'PLG-' . now()->format('YmdHis') . '-' . Auth::user()->id;
-                                            })
-                                            ->disabled()
-                                            ->dehydrated()
-                                            ->placeholder('Kode pelanggan akan dibuat otomatis'),
-
-                                    ]),
-                                Forms\Components\Select::make('data_produk')
-                                    ->label('Data Produk')
-                                    ->relationship('produk', 'nama_produk')
-                                    ->multiple()
-                                    ->preload()
-                                    ->required()
-                                    ->searchable()
-                                    ->live(onBlur: true)
-                                    ->afterStateUpdated(function (Get $get, Set $set) {
-                                        $produkIds = $get('data_produk');
-                                        if ($produkIds) {
-                                            $produks = Produk::whereIn('id', $produkIds)->get();
-                                            $set('minimal_qty', $produks->min('minimal_qty'));
-                                            $set('total_harga', $produks->sum('total_harga'));
-                                        }
-                                    }),
+                                    ->preload(),
                             ])->columns(2),
-                        Forms\Components\Group::make()
-                            ->schema([
-                                Forms\Components\TextInput::make('total_qty')
-                                    ->label('Total Quantity')
-                                    ->numeric()
-                                    ->disabled()
-                                    ->live(onBlur: true)
-                                    ->required()
-                                    ->rules([
-                                        'required',
-                                        'numeric',
-                                        fn(Get $get): string => 'min:' . ($get('minimal_qty') ?? 0),
-                                    ])
-                                    ->afterStateUpdated(function (Get $get, Set $set) {
-                                        $produkIds = $get('data_produk');
-                                        $totalQty = $get('total_qty');
-
-                                        if ($produkIds && $totalQty) {
-                                            $produks = Produk::whereIn('id', $produkIds)->get();
-
-                                            // Check minimal qty
-                                            $minQty = $produks->min('minimal_qty');
-                                            if ($totalQty < $minQty) {
-                                                Notification::make()
-                                                    ->warning()
-                                                    ->title('Minimal Quantity Not Met')
-                                                    ->body("Minimum quantity required is {$minQty}")
-                                                    ->send();
-                                                return;
-                                            }
-
-                                            // Calculate total
-                                            $totalHarga = $produks->sum(function ($produk) use ($totalQty) {
-                                                return (float) str_replace(['Rp', '.', ','], '', $produk->total_harga) * $totalQty;
-                                            });
-
-                                            $set('total_harga', $totalHarga);
-                                        }
-                                    }),
-
-                                Forms\Components\TextInput::make('total_harga')
-                                    ->label('Total Harga')
-                                    ->disabled()
-                                    ->numeric()
-                                    ->dehydrated()
-                            ])->columns(2),
-                        Forms\Components\Group::make()
-                            ->schema([
-                                Forms\Components\Select::make('metode_pembayaran')
-                                    ->options([
-                                        'transfer' => 'Transfer',
-                                        'cash' => 'Cash',
-                                        'qris' => 'QRIS',
-                                    ])
-                                    ->required(),
-                                Forms\Components\Select::make('status')
-                                    ->options([
-                                        'pending' => 'Pending',
-                                        'success' => 'Success',
-                                        'failed' => 'Failed',
-                                    ])
-                                    ->default('pending')
-                                    ->required(),
-                            ])->columns(2),
-                    ])
+                    ])->columnSpan(['lg' => 2]),
+                Forms\Components\Section::make('Pembayaran')
+                    ->description('Informasi pembayaran')
+                    ->schema([
+                        Forms\Components\Select::make('status')
+                            ->label('Status')
+                            ->options([
+                                'pending' => 'Pending',
+                                'completed' => 'Completed',
+                                'cancelled' => 'Cancelled',
+                            ])
+                            ->default('pending')
+                            ->required(),
+                        Forms\Components\TextInput::make('total_price')
+                            ->label('Total Harga')
+                            // ->disabled()
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->required(),
+                    ])->columnSpan(['lg' => 1])
             ]);
     }
 
@@ -183,68 +102,43 @@ class TransaksiResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('kode')
+                    ->label('Kode Transaksi')
+                    ->searchable()
+                    ->sortable()
+                    ->copyable()
+                    ->copyMessage('Kode transaksi berhasil disalin')
+                    ->copyMessageDuration(1500),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('User')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('pelanggan.nama')
                     ->label('Pelanggan')
-                    ->listWithLineBreaks()
                     ->searchable()
-                    ->sortable()
-                    ->bulleted(),
-                Tables\Columns\TextColumn::make('produk.nama_produk')
-                    ->label('Produk')
-                    ->listWithLineBreaks()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('vendor.name')
+                    ->label('Vendor')
                     ->searchable()
-                    ->sortable()
-                    ->bulleted(),
-                Tables\Columns\TextColumn::make('total_qty')
-                    ->label('Total Qty')
-                    ->searchable()
-                    ->sortable()
-                    ->badge()
-                    ->color('info'),
-                Tables\Columns\TextColumn::make('total_harga')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('total_price')
                     ->label('Total Harga')
-                    ->money('idr')
-                    ->searchable()
-                    ->sortable()
-                    ->icon('heroicon-o-currency-dollar')
-                    ->weight('bold'),
-                Tables\Columns\TextColumn::make('metode_pembayaran')
-                    ->badge()
-                    ->icon('heroicon-o-credit-card')
-                    ->colors([
-                        'warning' => 'transfer',
-                        'success' => 'cash',
-                        'primary' => 'qris',
-                    ]),
+                    ->money('IDR')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->icon('heroicon-o-check-circle')
                     ->colors([
+                        'danger' => 'cancelled',
                         'warning' => 'pending',
-                        'success' => 'success',
-                        'danger' => 'failed',
-                    ]),
+                        'success' => 'completed'
+                    ])
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Created At')
+                    ->label('Tanggal Transaksi')
                     ->dateTime()
                     ->sortable()
-                    ->icon('heroicon-o-clock')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Updated At')
-                    ->dateTime()
-                    ->sortable()
-                    ->icon('heroicon-o-arrow-path')
-                    ->toggleable(isToggledHiddenByDefault: true)
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('metode_pembayaran')
-                    ->options([
-                        'transfer' => 'Transfer',
-                        'cash' => 'Cash',
-                        'qris' => 'QRIS',
-                    ])
-                    ->label('Payment Method'),
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'pending' => 'Pending',
@@ -349,7 +243,7 @@ class TransaksiResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            TransaksiItemRelationManager::class,
         ];
     }
 

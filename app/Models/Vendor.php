@@ -81,4 +81,24 @@ class Vendor extends Model implements HasAvatar
         return $this->hasMany(Role::class, 'vendor_id');
     }
 
+    public function wholesalePrice()
+    {
+        return $this->hasMany(WholesalePrice::class, 'vendor_id');
+    }
+
+    public function spesifikasiProduk()
+    {
+        return $this->hasMany(SpesifikasiProduk::class, 'vendor_id');
+    }
+
+    public function transaksiItem()
+    {
+        return $this->hasMany(TransaksiItem::class, 'vendor_id');
+    }
+
+    public function ukuranBahan()
+    {
+        return $this->hasMany(UkuranBahan::class, 'vendor_id');
+    }
+
 }

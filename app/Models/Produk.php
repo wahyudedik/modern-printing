@@ -6,24 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Produk extends BaseModel
 {
-    protected $table = 'produks'; 
+    protected $table = 'produks';
 
     protected $fillable = [
         'vendor_id',
         'gambar',
         'nama_produk',
-        'slug',
         'deskripsi',
         'kategori',
-        'harga',
-        'diskon',
-        'minimal_qty',
-        'total_harga'
+        'created_at',
+        'updated_at'
     ];
 
     protected $casts = [
-        'gambar' => 'array',
-
+        'gambar' => 'json',
     ];
 
     public function vendor()
@@ -31,13 +27,13 @@ class Produk extends BaseModel
         return $this->belongsTo(Vendor::class, 'vendor_id');
     }
 
-    public function bahan()
+    public function spesifikasiProduk()
     {
-        return $this->belongsToMany(Bahan::class, 'produk_bahan');
+        return $this->hasMany(SpesifikasiProduk::class, 'produk_id');
     }
 
-    public function alat()
+    public function transaksiItem()
     {
-        return $this->belongsToMany(Alat::class, 'produk_alat');
+        return $this->hasMany(TransaksiItem::class, 'produk_id');
     }
 }

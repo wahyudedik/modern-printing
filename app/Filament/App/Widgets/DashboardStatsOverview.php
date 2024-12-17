@@ -15,7 +15,7 @@ class DashboardStatsOverview extends BaseWidget
     protected static ?string $pollingInterval = '15s';
     
     protected function getStats(): array
-    {
+    { 
         $today = Carbon::today();
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
@@ -42,11 +42,11 @@ class DashboardStatsOverview extends BaseWidget
                 ->chart([3, 5, 7, 4, 6, 3, 5, 4])
                 ->icon('heroicon-o-calendar'),
                 
-            Stat::make('Pendapatan Bulanan', function() use ($startOfMonth, $endOfMonth) {
+        Stat::make('Pendapatan Bulanan', function() use ($startOfMonth, $endOfMonth) {
                 return 'Rp ' . number_format(
                     Transaksi::whereBetween('created_at', [$startOfMonth, $endOfMonth])
                         ->where('status', 'success')
-                        ->sum('total_harga'), 
+                        ->sum('total_price'), 
                     0, 
                     ',', 
                     '.'

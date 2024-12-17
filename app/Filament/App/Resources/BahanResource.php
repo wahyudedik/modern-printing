@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Collection;
 use App\Filament\App\Resources\BahanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\BahanResource\RelationManagers;
+use App\Filament\App\Resources\BahanResource\RelationManagers\UkuranBahanRelationManager;
+use App\Filament\App\Resources\BahanResource\RelationManagers\WholesalePriceRelationManager;
 
 class BahanResource extends Resource
 {
@@ -46,31 +48,34 @@ class BahanResource extends Resource
                     ->description('Masukkan informasi detail bahan')
                     ->schema([
                         Forms\Components\TextInput::make('nama_bahan')
+                            ->label('Nama Bahan')
                             ->required()
                             ->maxLength(255)
-                            ->label('Nama Bahan'),
+                            ->placeholder('Masukkan nama bahan')
+                            ->columnSpanFull(),
 
                         Forms\Components\Textarea::make('deskripsi')
+                            ->label('Deskripsi')
+                            ->placeholder('Masukkan deskripsi bahan')
                             ->maxLength(65535)
-                            ->columnSpanFull()
-                            ->label('Deskripsi'),
-
-                        Forms\Components\KeyValue::make('spesifikasi')
-                            ->label('Spesifikasi')
-                            ->required()
                             ->columnSpanFull(),
-                    ])->columns(2),
 
-                Forms\Components\Section::make('Informasi Tambahan')
-                    ->schema([
-                        Forms\Components\TextInput::make('supplier')
-                            ->maxLength(255)
-                            ->label('Supplier'),
+                        Forms\Components\Group::make()
+                            ->schema([
+                                Forms\Components\TextInput::make('unit_price')
+                                    ->label('Harga per Unit')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->required()
+                                    ->maxValue(9999999999)
+                                    ->placeholder('0'),
 
-                        Forms\Components\Toggle::make('is_active')
-                            ->label('Status Aktif')
-                            ->default(true)
-                            ->required(),
+                                Forms\Components\TextInput::make('unit')
+                                    ->label('Satuan')
+                                    ->required()
+                                    ->maxLength(50)
+                                    ->placeholder('Contoh: m2, lembar'),
+                            ])->columns(2),
                     ])->columns(2)
             ]);
     }
@@ -83,55 +88,21 @@ class BahanResource extends Resource
                     ->label('Nama Bahan')
                     ->searchable()
                     ->sortable()
-                    ->description(fn(Bahan $record): string => $record->deskripsi ?? '-')
-                    ->weight('medium')
-                    ->copyable(),
-                Tables\Columns\TextColumn::make('spesifikasi')
-                    ->label('Spesifikasi')
-                    ->listWithLineBreaks()
-                    ->bulleted()
-                    ->color('gray')
-                    ->getStateUsing(function (Bahan $record) {
-                        $specs = $record->spesifikasi;
-                        if (!is_array($specs)) {
-                            return [];
-                        }
-
-                        return array_map(function ($value, $key) {
-                            return "{$key}: {$value}";
-                        }, $specs, array_keys($specs));
-                    }),
-                Tables\Columns\TextColumn::make('supplier')
-                    ->label('Supplier')
+                    ->description(fn($record): string => $record->deskripsi ?? '-'),
+                Tables\Columns\TextColumn::make('unit_price')
+                    ->label('Harga per Unit')
+                    ->money('IDR')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('unit')
+                    ->label('Satuan')
                     ->searchable()
-                    ->sortable()
-                    ->icon('heroicon-m-building-office')
-                    ->iconColor('primary'),
-                Tables\Columns\IconColumn::make('is_active')
-                    ->label('Status')
-                    ->boolean()
-                    ->sortable()
-                    ->color('primary'),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->since(),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Diperbarui')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->since()
             ])->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')
-                    ->label('Status Aktif')
-                    ->boolean()
-                    ->trueLabel('Aktif')
-                    ->falseLabel('Tidak Aktif')
-                    ->native(false),
                 Tables\Filters\Filter::make('created_at')
                     ->form([
                         Forms\Components\DatePicker::make('created_from')
@@ -153,21 +124,7 @@ class BahanResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
-                        ->form([
-                            Forms\Components\TextInput::make('nama_bahan')
-                                ->label('Nama Bahan')
-                                ->required(),
-                            Forms\Components\Textarea::make('deskripsi')
-                                ->label('Deskripsi'),
-                            Forms\Components\KeyValue::make('spesifikasi')
-                                ->label('Spesifikasi'),
-                            Forms\Components\TextInput::make('supplier')
-                                ->label('Supplier'),
-                            Forms\Components\Toggle::make('is_active')
-                                ->label('Status Aktif')
-                                ->default(true),
-                        ]),
+                    Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make()
                         ->modalDescription('Apakah anda yakin ingin menghapus data ini?')
@@ -177,26 +134,6 @@ class BahanResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
                         ->modalDescription('Apakah anda yakin ingin menghapus data yang dipilih?'),
-                    Tables\Actions\BulkAction::make('update')
-                        ->label('Update Data')
-                        ->icon('heroicon-o-pencil')
-                        ->form([
-                            Forms\Components\TextInput::make('nama_bahan')
-                                ->label('Nama Bahan'),
-                            Forms\Components\Textarea::make('deskripsi')
-                                ->label('Deskripsi'),
-                            Forms\Components\KeyValue::make('spesifikasi')
-                                ->label('Spesifikasi'),
-                            Forms\Components\TextInput::make('supplier')
-                                ->label('Supplier'),
-                            Forms\Components\Toggle::make('is_active')
-                                ->label('Status Aktif')
-                        ])
-                        ->action(function (Collection $records, array $data) {
-                            $records->each(function ($record) use ($data) {
-                                $record->update($data);
-                            });
-                        }),
                 ]),
             ]);
     }
@@ -204,7 +141,7 @@ class BahanResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            WholesalePriceRelationManager::class,
         ];
     }
 

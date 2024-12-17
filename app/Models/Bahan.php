@@ -12,23 +12,30 @@ class Bahan extends BaseModel
         'vendor_id',
         'nama_bahan',
         'deskripsi',
-        'spesifikasi',
-        'supplier',
-        'is_active'
+        'unit_price',
+        'unit',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'spesifikasi' => 'array',
-    ];
- 
+        'unit_price' => 'decimal:2'
+    ]; 
     public function vendor()
     {
         return $this->belongsTo(Vendor::class, 'vendor_id');
     }
 
-    public function produks()
+    public function wholesalePrice()
     {
-        return $this->belongsToMany(Produk::class, 'produk_bahan');
+        return $this->hasMany(WholesalePrice::class, 'bahan_id');
+    }
+
+    public function transaksiItem()
+    {
+        return $this->hasMany(TransaksiItem::class, 'bahan_id');
+    }
+
+    public function ukuranBahan()
+    {
+        return $this->hasMany(UkuranBahan::class, 'bahan_id');
     }
 }

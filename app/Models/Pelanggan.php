@@ -28,4 +28,9 @@ class Pelanggan extends BaseModel
     {
         return $this->belongsTo(Vendor::class, 'vendor_id');
     }
+
+    public function transaksi()
+    {
+        return $this->hasMany(Transaksi::class, 'pelanggan_id');
+    }
 }

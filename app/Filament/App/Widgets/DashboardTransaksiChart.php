@@ -13,7 +13,7 @@ class DashboardTransaksiChart extends ChartWidget
     protected static ?int $sort = 2;
 
     protected function getData(): array
-    {
+    { 
         $data = $this->getDailyTransactions();
 
         return [
