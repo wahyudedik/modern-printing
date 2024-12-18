@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('produk_id')->constrained('produks')->cascadeOnDelete();
             $table->foreignId('spesifikasi_id')->constrained('spesifikasis')->cascadeOnDelete();
             $table->string('wajib_diisi');
-            $table->json('pilihan');
+            $table->json('pilihan')->nullable();
             $table->timestamps();
         });
     }

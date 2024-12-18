@@ -17,8 +17,8 @@ return new class extends Migration
             $table->json('gambar')->nullable();
             $table->string('nama_produk');
             $table->text('deskripsi');
-            $table->foreignId('kategori')->constrained('kategori_produks')->cascadeOnDelete();
-            $table->integer('harga_dasar');
+            $table->foreignId('kategori_id')->constrained('kategori_produks')->cascadeOnDelete();
+            $table->decimal('harga_dasar', 10, 2);
             $table->timestamps();
         });
     }

@@ -88,12 +88,30 @@ class TransaksiResource extends Resource
                             ])
                             ->default('pending')
                             ->required(),
-                        Forms\Components\TextInput::make('total_price')
+                        Forms\Components\TextInput::make('total_harga')
                             ->label('Total Harga')
-                            // ->disabled()
                             ->numeric()
                             ->prefix('Rp')
                             ->required(),
+                        Forms\Components\Select::make('payment_method')
+                            ->label('Metode Pembayaran')
+                            ->options([
+                                'cash' => 'Cash',
+                                'transfer' => 'Transfer Bank',
+                                'ewallet' => 'E-Wallet'
+                            ])
+                            ->required(),
+                    ])->columnSpan(['lg' => 1]),
+                Forms\Components\Section::make('Informasi Tambahan')
+                    ->description('Informasi estimasi dan tanggal')
+                    ->schema([
+                        Forms\Components\TextInput::make('estimasi_selesai')
+                            ->label('Estimasi Selesai')
+                            ->required(),
+                        Forms\Components\DatePicker::make('tanggal_dibuat')
+                            ->label('Tanggal Dibuat')
+                            ->required()
+                            ->default(now()),
                     ])->columnSpan(['lg' => 1])
             ]);
     }
@@ -108,23 +126,33 @@ class TransaksiResource extends Resource
                     ->sortable()
                     ->copyable()
                     ->copyMessage('Kode transaksi berhasil disalin')
-                    ->copyMessageDuration(1500),
+                    ->copyMessageDuration(1500)
+                    ->description(fn(Transaksi $record): string => "Created by: {$record->user?->name}")
+                    ->icon('heroicon-o-document-text'),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('User')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-o-user')
+                    ->description(fn(Transaksi $record): string => $record->user?->email ?? '-'),
                 Tables\Columns\TextColumn::make('pelanggan.nama')
                     ->label('Pelanggan')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-o-users')
+                    ->description(fn(Transaksi $record): string => "Customer ID: {$record->pelanggan_id}"),
                 Tables\Columns\TextColumn::make('vendor.name')
                     ->label('Vendor')
                     ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('total_price')
+                    ->sortable()
+                    ->icon('heroicon-o-building-storefront')
+                    ->description(fn(Transaksi $record): string => "Vendor ID: {$record->vendor_id}"),
+                Tables\Columns\TextColumn::make('total_harga')
                     ->label('Total Harga')
                     ->money('IDR')
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-o-currency-dollar')
+                    ->description(fn(Transaksi $record): string => "Payment: {$record->payment_method}"),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->colors([
@@ -132,11 +160,15 @@ class TransaksiResource extends Resource
                         'warning' => 'pending',
                         'success' => 'completed'
                     ])
+                    ->icon('heroicon-o-check-circle')
+                    ->description(fn(Transaksi $record): string => "Est. completion: {$record->estimasi_selesai}")
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Tanggal Transaksi')
                     ->dateTime()
                     ->sortable()
+                    ->icon('heroicon-o-calendar')
+                    ->description(fn(Transaksi $record): string => "Due date: {$record->tanggal_dibuat}")
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')

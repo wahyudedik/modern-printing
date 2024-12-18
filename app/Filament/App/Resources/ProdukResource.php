@@ -70,9 +70,31 @@ class ProdukResource extends Resource
                                 Forms\Components\TextInput::make('nama_produk')
                                     ->required()
                                     ->maxLength(255),
-                                Forms\Components\TextInput::make('kategori')
+                                Forms\Components\Select::make('kategori_id')
+                                    ->relationship('kategori', 'nama_kategori')
+                                    ->createOptionForm([
+                                        Forms\Components\Hidden::make('vendor_id')
+                                            ->default(Filament::getTenant()->id),
+                                        Forms\Components\TextInput::make('nama_kategori')
+                                            ->required()
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(function ($state, callable $set) {
+                                                $set('slug', Str::slug($state));
+                                            })
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('slug')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->prefix('/')
+                                            ->disabled()
+                                            ->dehydrated()
+                                            ->helperText('Slug akan terisi otomatis'),
+                                    ])
+                                    ->required(),
+                                Forms\Components\TextInput::make('harga_dasar')
                                     ->required()
-                                    ->maxLength(255),
+                                    ->numeric()
+                                    ->prefix('Rp'),
                             ]),
                     ])->columnSpanFull(),
                 Forms\Components\Group::make()
@@ -101,31 +123,42 @@ class ProdukResource extends Resource
                     ->weight('bold')
                     ->size('lg')
                     ->description(fn(Produk $record): string => strip_tags($record->deskripsi)),
-                Tables\Columns\TextColumn::make('kategori')
+                Tables\Columns\TextColumn::make('kategori.nama_kategori')
                     ->label('Kategori')
                     ->searchable()
                     ->sortable()
                     ->badge()
                     ->icon('heroicon-m-tag')
                     ->color('primary'),
+                Tables\Columns\TextColumn::make('spesifikasiProduk')
+                    ->label('Spesifikasi')
+                    ->formatStateUsing(function ($record) {
+                        $specs = [];
+                        $record->spesifikasiProduk->each(function ($spek) use (&$specs) {
+                            $specs[] = "{$spek->spesifikasi->nama_spesifikasi}: " . implode(', ', $spek->pilihan);
+                        });
+                        return implode(' | ', $specs);
+                    }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
+                    ->label('Dibuat pada')
                     ->toggleable()
                     ->since(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
+                    ->label('Diubah pada')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
-                    ->since()
-            ])
+                    ->since(),
+            ])->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('kategori')
+                Tables\Filters\SelectFilter::make('kategori_id')
+                    ->relationship('kategori', 'nama_kategori')
                     ->label('Filter Kategori')
                     ->multiple()
                     ->preload()
-                    ->searchable()
-                    ->options(fn() => Produk::pluck('kategori', 'kategori')),
+                    ->searchable(),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -160,15 +193,14 @@ class ProdukResource extends Resource
                             // Get fresh data with eager loading of relationships
                             $produk = Produk::where('id', $record->id)
                                 ->with([
-                                    'vendor'
+                                    'vendor',
+                                    'kategori'
                                 ])
                                 ->first();
 
-                            // Convert to array to ensure data accessibility in view
-                            $produkArray = $produk->toArray();
-
+                            // Pass the model directly instead of converting to array
                             $pdf = Pdf::loadView('pdf.produk', [
-                                'produk' => $produkArray
+                                'produk' => $produk
                             ]);
 
                             return response()->streamDownload(function () use ($pdf) {

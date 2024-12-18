@@ -2,14 +2,20 @@
 
 namespace App\Filament\App\Resources\ProdukResource\RelationManagers;
 
-use Filament\Facades\Filament;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use App\Models\Bahan;
+use App\Models\SpesifikasiProduk;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Facades\Filament;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\TagsInput;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Resources\RelationManagers\RelationManager;
 
 class SpesifikasiProdukRelationManager extends RelationManager
 {
@@ -19,23 +25,35 @@ class SpesifikasiProdukRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\Hidden::make('vendor_id')
-                    ->default(Filament::getTenant()->id),
                 Forms\Components\Section::make('Spesifikasi Produk')
-                    ->description('Masukkan detail spesifikasi produk')
                     ->schema([
                         Forms\Components\Group::make()
                             ->schema([
-                                Forms\Components\TextInput::make('nama')
-                                    ->required()
-                                    ->maxLength(100)
-                                    ->label('Nama Spesifikasi'),
-                                Forms\Components\Textarea::make('options')
-                                    ->required()
-                                    ->label('Pilihan Spesifikasi')
-                                    ->helperText('Masukkan pilihan spesifikasi produk')
+                                Forms\Components\hidden::make('vendor_id')
+                                    ->default(Filament::getTenant()->id),
+                                Select::make('spesifikasi_id')
+                                    ->relationship('spesifikasi', 'nama_spesifikasi')
+                                    ->required(),
+
+                                Select::make('wajib_diisi')
+                                    ->options([
+                                        '1' => 'Ya',
+                                        '0' => 'Tidak'
+                                    ])
+                                    ->required(),
+
+                                Select::make('pilihan')
+                                    ->multiple()
+                                    ->options(function () {
+                                        return Bahan::where('vendor_id', Filament::getTenant()->id)
+                                            ->pluck('nama_bahan', 'id')
+                                            ->toArray();
+                                    })
+                                    ->default(null),
                             ])
+                            ->columns(2)
                     ])
+
             ]);
     }
 
@@ -44,18 +62,29 @@ class SpesifikasiProdukRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('id')
             ->columns([
-                // Tables\Columns\TextColumn::make('id'),
-                Tables\Columns\TextColumn::make('nama')
+                Tables\Columns\TextColumn::make('spesifikasi.nama_spesifikasi')
                     ->label('Nama Spesifikasi')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('options')
-                    ->label('Pilihan Spesifikasi')
-                    ->limit(50)
-                    ->tooltip(function (Tables\Columns\TextColumn $column): string {
-                        return $column->getRecord()->options;
+                Tables\Columns\TextColumn::make('wajib_diisi')
+                    ->label('Wajib Diisi')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('pilihan')
+                    ->label('Pilihan')
+                    ->badge()
+                    ->searchable()
+                    ->getStateUsing(function (SpesifikasiProduk $record) {
+                        $specs = $record->pilihan;
+                        if (!is_array($specs)) {
+                            return [];
+                        }
+
+                        return array_map(function ($value, $key) {
+                            return "{$key}: {$value}";
+                        }, $specs, array_keys($specs));
                     })
-                    ->searchable(),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat Pada')
                     ->dateTime()

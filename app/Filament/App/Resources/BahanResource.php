@@ -54,28 +54,28 @@ class BahanResource extends Resource
                             ->placeholder('Masukkan nama bahan')
                             ->columnSpanFull(),
 
-                        Forms\Components\Textarea::make('deskripsi')
-                            ->label('Deskripsi')
-                            ->placeholder('Masukkan deskripsi bahan')
-                            ->maxLength(65535)
-                            ->columnSpanFull(),
-
                         Forms\Components\Group::make()
                             ->schema([
-                                Forms\Components\TextInput::make('unit_price')
-                                    ->label('Harga per Unit')
+                                Forms\Components\TextInput::make('harga_per_satuan')
+                                    ->label('Harga per Satuan')
                                     ->numeric()
                                     ->prefix('Rp')
                                     ->required()
                                     ->maxValue(9999999999)
                                     ->placeholder('0'),
 
-                                Forms\Components\TextInput::make('unit')
+                                Forms\Components\TextInput::make('satuan')
                                     ->label('Satuan')
                                     ->required()
                                     ->maxLength(50)
                                     ->placeholder('Contoh: m2, lembar'),
-                            ])->columns(2),
+
+                                Forms\Components\TextInput::make('stok')
+                                    ->label('Stok')
+                                    ->numeric()
+                                    ->nullable()
+                                    ->placeholder('Masukkan jumlah stok'),
+                            ])->columns(3),
                     ])->columns(2)
             ]);
     }
@@ -87,20 +87,29 @@ class BahanResource extends Resource
                 Tables\Columns\TextColumn::make('nama_bahan')
                     ->label('Nama Bahan')
                     ->searchable()
-                    ->sortable()
-                    ->description(fn($record): string => $record->deskripsi ?? '-'),
-                Tables\Columns\TextColumn::make('unit_price')
-                    ->label('Harga per Unit')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('harga_per_satuan')
+                    ->label('Harga per Satuan')
                     ->money('IDR')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('unit')
+                Tables\Columns\TextColumn::make('satuan')
                     ->label('Satuan')
                     ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('stok')
+                    ->label('Stok')
+                    ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat')
                     ->dateTime()
                     ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Diperbarui')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
             ])->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\Filter::make('created_at')

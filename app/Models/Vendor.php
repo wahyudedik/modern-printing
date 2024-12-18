@@ -96,9 +96,19 @@ class Vendor extends Model implements HasAvatar
         return $this->hasMany(TransaksiItem::class, 'vendor_id');
     }
 
-    public function ukuranBahan()
+    public function kategori()
     {
-        return $this->hasMany(UkuranBahan::class, 'vendor_id');
+        return $this->hasMany(KategoriProduk::class, 'vendor_id');
+    }
+
+    public function spesifikasi()
+    {
+        return $this->hasMany(Spesifikasi::class, 'vendor_id');
+    }
+
+    public function estimasiProduk()
+    {
+        return $this->hasMany(EstimasiProduk::class, 'vendor_id');
     }
 
 }

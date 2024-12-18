@@ -11,14 +11,14 @@ class SpesifikasiProduk extends BaseModel
     protected $fillable = [
         'vendor_id',
         'produk_id',
-        'nama',
-        'options'
+        'spesifikasi_id',
+        'wajib_diisi',
+        'pilihan'
     ];
 
     protected $casts = [
-        'options' => 'array'
+        'pilihan' => 'array'
     ];
-
     public function vendor()
     {
         return $this->belongsTo(Vendor::class, 'vendor_id');
@@ -27,5 +27,10 @@ class SpesifikasiProduk extends BaseModel
     public function produk()
     {
         return $this->belongsTo(Produk::class, 'produk_id');
+    }
+
+    public function spesifikasi()
+    {
+        return $this->belongsTo(Spesifikasi::class, 'spesifikasi_id');
     }
 }

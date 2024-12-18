@@ -11,14 +11,15 @@ class Bahan extends BaseModel
     protected $fillable = [ 
         'vendor_id',
         'nama_bahan',
-        'deskripsi',
-        'unit_price',
-        'unit',
+        'harga_per_satuan',
+        'satuan',
+        'stok'
     ];
 
     protected $casts = [
-        'unit_price' => 'decimal:2'
-    ]; 
+        'harga_per_satuan' => 'decimal:2',
+        'stok' => 'string'
+    ];    
     public function vendor()
     {
         return $this->belongsTo(Vendor::class, 'vendor_id');
@@ -32,10 +33,5 @@ class Bahan extends BaseModel
     public function transaksiItem()
     {
         return $this->hasMany(TransaksiItem::class, 'bahan_id');
-    }
-
-    public function ukuranBahan()
-    {
-        return $this->hasMany(UkuranBahan::class, 'bahan_id');
     }
 }

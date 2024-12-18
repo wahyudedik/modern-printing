@@ -10,20 +10,21 @@ class WholesalePrice extends BaseModel
 
     protected $fillable = [
         'vendor_id',
+        'produk_id',
         'bahan_id',
         'min_quantity',
         'max_quantity',
-        'price_per_unit'
+        'harga'
     ];
 
     protected $casts = [
         'vendor_id' => 'integer',
+        'produk_id' => 'integer',
         'bahan_id' => 'integer',
         'min_quantity' => 'integer',
         'max_quantity' => 'integer',
-        'price_per_unit' => 'decimal:2'
+        'harga' => 'decimal:2'
     ];
-
     public function vendor()
     {
         return $this->belongsTo(Vendor::class, 'vendor_id');
@@ -33,4 +34,11 @@ class WholesalePrice extends BaseModel
     {
         return $this->belongsTo(Bahan::class, 'bahan_id');
     }
+
+    public function produk()
+    {
+        return $this->belongsTo(Produk::class, 'produk_id');
+    }
+
+
 }

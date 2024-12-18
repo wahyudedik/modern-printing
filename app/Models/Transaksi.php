@@ -13,15 +13,18 @@ class Transaksi extends BaseModel
         'kode',
         'user_id',
         'pelanggan_id',
-        'total_price',
-        'status'
+        'total_harga',
+        'status',
+        'payment_method',
+        'estimasi_selesai',
+        'tanggal_dibuat'
     ];
 
     protected $casts = [
-        'total_price' => 'decimal:2',
-        'status' => 'string'
+        'total_harga' => 'decimal:2',
+        'status' => 'string',
+        'tanggal_dibuat' => 'date'
     ];
-
     public function vendor()
     {
         return $this->belongsTo(Vendor::class, 'vendor_id');
@@ -31,7 +34,7 @@ class Transaksi extends BaseModel
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-    
+
     public function pelanggan()
     {
         return $this->belongsTo(Pelanggan::class, 'pelanggan_id');

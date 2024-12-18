@@ -46,7 +46,7 @@ class DashboardStatsOverview extends BaseWidget
                 return 'Rp ' . number_format(
                     Transaksi::whereBetween('created_at', [$startOfMonth, $endOfMonth])
                         ->where('status', 'success')
-                        ->sum('total_price'), 
+                        ->sum('total_harga'), 
                     0, 
                     ',', 
                     '.'

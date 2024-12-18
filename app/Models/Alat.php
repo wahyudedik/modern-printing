@@ -17,6 +17,7 @@ class Alat extends BaseModel
         'status',
         'tanggal_pembelian',
         'kapasitas_cetak_per_jam',
+        'tersedia',
         'keterangan'
     ];
 
@@ -31,7 +32,7 @@ class Alat extends BaseModel
             'aktif' => 'success',
             'maintenance' => 'warning',
             'rusak' => 'danger',
-        ][$this->status] ?? 'secondary'; 
+        ][$this->status] ?? 'secondary';
     }
 
     public function scopeAktif($query)
@@ -57,5 +58,10 @@ class Alat extends BaseModel
     public function produks()
     {
         return $this->belongsToMany(Produk::class, 'produk_alat');
+    }
+
+    public function estimasiProduk()
+    {
+        return $this->hasMany(EstimasiProduk::class, 'alat_id');
     }
 }

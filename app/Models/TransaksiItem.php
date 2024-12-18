@@ -13,19 +13,16 @@ class TransaksiItem extends BaseModel
         'transaksi_id',
         'produk_id',
         'bahan_id',
-        'quantity',
-        'price',
-        'wholesale_price_per_unit',
-        'specs'
+        'kuantitas',
+        'harga_satuan',
+        'spesifikasi'
     ];
 
     protected $casts = [
-        'quantity' => 'integer',
-        'price' => 'decimal:2',
-        'wholesale_price_per_unit' => 'decimal:2',
-        'specs' => 'json'
+        'kuantitas' => 'integer',
+        'harga_satuan' => 'decimal:2',
+        'spesifikasi' => 'json'
     ];
-
     public function vendor()
     {
         return $this->belongsTo(Vendor::class, 'vendor_id');

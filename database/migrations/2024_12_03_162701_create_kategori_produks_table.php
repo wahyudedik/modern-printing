@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
             $table->string('nama_kategori');
+            $table->string('slug');
             $table->timestamps();
         });
     }

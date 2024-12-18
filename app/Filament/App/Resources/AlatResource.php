@@ -73,10 +73,15 @@ class AlatResource extends Resource
                                 Forms\Components\DatePicker::make('tanggal_pembelian')
                                     ->required(),
                             ]),
-                        Forms\Components\TextInput::make('kapasitas_cetak_per_jam')
-                            ->numeric()
-                            ->required()
-                            ->label('Kapasitas Cetak/Jam'),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('kapasitas_cetak_per_jam')
+                                    ->numeric()
+                                    ->required()
+                                    ->label('Kapasitas Cetak/Jam'),
+                                Forms\Components\TextInput::make('tersedia')
+                                    ->maxLength(255),
+                            ]),
                     ]),
                 Forms\Components\Section::make('Keterangan Tambahan')
                     ->schema([
@@ -84,7 +89,6 @@ class AlatResource extends Resource
                             ->rows(3),
                     ])
                     ->collapsible()
-
             ]);
     }
 
@@ -99,6 +103,10 @@ class AlatResource extends Resource
                     ->sortable()
                     ->weight('bold')
                     ->copyable(),
+                Tables\Columns\TextColumn::make('vendor.nama')
+                    ->searchable()
+                    ->sortable()
+                    ->icon('heroicon-m-building-office'),
                 Tables\Columns\TextColumn::make('merk')
                     ->wrap()
                     ->searchable()
@@ -134,17 +142,9 @@ class AlatResource extends Resource
                     ->sortable()
                     ->icon('heroicon-m-clock')
                     ->alignment('center'),
-                Tables\Columns\TextColumn::make('keterangan')
-                    ->limit(30)
-                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
-                        $state = $column->getState();
-                        if (strlen($state) <= 30) {
-                            return null;
-                        }
-                        return $state;
-                    })
-                    ->icon('heroicon-m-information-circle')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('tersedia')
+                    ->searchable()
+                    ->icon('heroicon-m-check-circle'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
