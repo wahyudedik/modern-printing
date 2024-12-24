@@ -64,4 +64,26 @@ class Alat extends BaseModel
     {
         return $this->hasMany(EstimasiProduk::class, 'alat_id');
     }
+
+    public function checkDailyCapacity($requestedTime)
+    {
+        $totalScheduledTime = Transaksi::whereDate('estimasi_selesai', today())
+            ->whereHas('transaksiItem.produk.estimasiProduk', function ($query) {
+                $query->where('alat_id', $this->id);
+            })->sum('estimated_duration');
+
+        $availableMinutes = $this->kapasitas_cetak_per_jam * 60;
+        return ($totalScheduledTime + $requestedTime) <= $availableMinutes;
+    }
+
+    public function getNextAvailableSlot()
+    {
+        $lastScheduledJob = Transaksi::whereHas('transaksiItem.produk.estimasiProduk', function ($query) {
+            $query->where('alat_id', $this->id);
+        })
+            ->orderBy('estimasi_selesai', 'desc')
+            ->first();
+
+        return $lastScheduledJob ? $lastScheduledJob->estimasi_selesai : now();
+    }
 }

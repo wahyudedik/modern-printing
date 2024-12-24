@@ -27,8 +27,6 @@ class WholesalePriceRelationManager extends RelationManager
                             ->schema([
                                 Forms\Components\Hidden::make('vendor_id')
                                     ->default(Filament::getTenant()->id),
-                                Forms\Components\Hidden::make('bahan_id')
-                                    ->default(fn($record) => $record->id),
                                 Forms\Components\TextInput::make('min_quantity')
                                     ->label('Minimum Quantity')
                                     ->numeric()
@@ -42,15 +40,17 @@ class WholesalePriceRelationManager extends RelationManager
                             ])->columns(2),
                         Forms\Components\Group::make()
                             ->schema([
-                                Forms\Components\TextInput::make('price_per_unit')
+                                Forms\Components\TextInput::make('harga')
                                     ->label('Price Per Unit')
                                     ->numeric()
                                     ->required()
                                     ->prefix('Rp')
                                     ->minValue(0)
                                     ->step(0.01),
-                                Forms\Components\Hidden::make('produk_id')
-                                    ->default(fn($record) => $record->produk_id),
+                                Forms\Components\Select::make('produk_id')
+                                    ->label('Product')
+                                    ->required()
+                                    ->relationship('produk', 'nama_produk'),
                             ])->columns(1),
                     ])
             ]);
@@ -73,14 +73,18 @@ class WholesalePriceRelationManager extends RelationManager
                     ->description('Maximum quantity limit (optional)')
                     ->sortable()
                     ->placeholder('Unlimited'),
-                Tables\Columns\TextColumn::make('price_per_unit')
+                Tables\Columns\TextColumn::make('harga')
                     ->label('Price Per Unit')
-                    ->money('Rp')
                     ->description('Wholesale price per unit')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('bahan.nama_bahan')
                     ->label('Material')
                     ->description('Associated material')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('produk.nama_produk')
+                    ->label('Produk')
+                    ->description('Associated produk')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')

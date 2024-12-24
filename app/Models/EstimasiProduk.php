@@ -30,4 +30,30 @@ class EstimasiProduk extends BaseModel
     {
         return $this->belongsTo(Alat::class, 'alat_id');
     }
+
+    public function calculateTotalProductionTime($quantity, $area = null)
+    {
+        $setupTime = $this->waktu_persiapan;
+        $productionTimePerUnit = $this->waktu_produksi_per_unit;
+        $alat = $this->alat;
+
+        // Factor in equipment workload
+        $workloadMultiplier = $this->getWorkloadMultiplier($alat);
+
+        if ($area) {
+            return ($setupTime + ($area * $productionTimePerUnit * $quantity)) * $workloadMultiplier;
+        }
+
+        return ($setupTime + ($productionTimePerUnit * $quantity)) * $workloadMultiplier;
+    }
+
+    private function getWorkloadMultiplier($alat)
+    {
+        $activeJobs = Transaksi::where('status', 'processing')
+            ->whereHas('transaksiItem.produk.estimasiProduk', function ($query) use ($alat) {
+                $query->where('alat_id', $alat->id);
+            })->count();
+
+        return 1 + ($activeJobs * 0.1); // 10% increase per active job
+    }
 }

@@ -40,5 +40,17 @@ class WholesalePrice extends BaseModel
         return $this->belongsTo(Produk::class, 'produk_id');
     }
 
+    public function getDiscountedPrice($quantity, $bahanId)
+    {
+        return $this->where('bahan_id', $bahanId)
+            ->where('min_quantity', '<=', $quantity)
+            ->where('max_quantity', '>=', $quantity)
+            ->first()?->harga ?? null;
+    }
 
+    public function calculateFinalPrice($basePrice, $quantity, $bahanId)
+    {
+        $wholesalePrice = $this->getDiscountedPrice($quantity, $bahanId);
+        return $wholesalePrice ?? $basePrice;
+    }
 }

@@ -9,33 +9,91 @@
 <p>php artisan shield:generate --all</p>
 <p>php artisan shield:super-admin</p>
 
+bug :
+8. laporan belum fix untuk tabelnya
+
+POS System Flow:
+
+1. Perbaikan alur transaksi POS:
+
+    - Implementasi validasi stok secara real-time
+    - Perbaikan kalkulasi harga berdasarkan spesifikasi
+    - Optimasi performa cart dengan Alpine.js
+    - Penambahan fitur diskon dan pajak
+    - Implementasi notifikasi status pesanan
+    - Implementasi notifikasi stok habis
+    - Implementasi print invoice
+    - Implementasi detail pesanan
+
+2. Perbaikan Model dan Relasi:
+
+    - Normalisasi struktur database transaksi
+    - Optimasi relasi antar tabel
+    - Perbaikan scope tenant
+    - Standarisasi format JSON untuk spesifikasi
+
+3. Perbaikan Resources:
+
+    - Restrukturisasi form dan tabel
+    - Penambahan validasi yang lebih ketat
+    - Optimasi upload gambar produk
+    - Implementasi soft deletes
+
+4. Perbaikan Logika Harga:
+
+    - Rekalkulasi harga grosir
+    - Perbaikan perhitungan biaya material
+    - Optimasi sistem estimasi waktu produksi
+    - Penambahan fitur diskon bertingkat
+
+5. Perbaikan Proses Transaksi:
+
+    - Implementasi sistem antrian
+    - Perbaikan format penyimpanan JSON
+    - Penambahan metode pembayaran
+    - Implementasi notifikasi status pesanan
+
+6. Penambahan Fitur:
+
+    - Sistem caching untuk data produk
+    - Proses batch untuk pesanan massal
+    - Tracking status pesanan real-time
+    - Laporan analitik penjualan
+
+7. Optimasi Performa:
+    - Implementasi queue untuk proses berat
+    - Optimasi query database
+    - Caching pada level aplikasi
+    - Monitoring sistem
+
 list :
-- [x] 1. Create a new Laravel project
-- [x] 2. Create a new database
-- [x] 3. Configure the database connection in the .env file
-- [x] 4. Create a new migration for the user table
-- [x] 5. Create a new model for the user table
-- [x] 6. Create a homepage
-- [x] 7. install filament
-- [x] 8. install filament panel 'admin' dan 'app'
-- [x] 9. install filament language dan env dan timezone 'id'
-- [x] 10. filament panel app dan admin - login
-- [x] 11. Setting Tenant pada dashboard admin
-- [x] 12. create tenant pada dashboard app
-- [x] 13. install filament shield
-- [x] 14. install filament themes
-- [x] 15. panel app resource user
-- [x] 16. panel app resource role
-- [x] 17. panel app resource permission
-- [x] 18. Resource bahan dan alat
-- [x] 19. Resource produk
-- [x] 20. Resource pelanggan
-- [x] 21. Resource transaksi
-- [x] 22. Resource POS
-- [x] 23. Dashboard app
-- [x] 24. Dashboard admin
-- [x] 25. Relasi Vendor
-- [] 26. perbaikian pos dan databasenya
+
+-   [x] 1. Create a new Laravel project
+-   [x] 2. Create a new database
+-   [x] 3. Configure the database connection in the .env file
+-   [x] 4. Create a new migration for the user table
+-   [x] 5. Create a new model for the user table
+-   [x] 6. Create a homepage
+-   [x] 7. install filament
+-   [x] 8. install filament panel 'admin' dan 'app'
+-   [x] 9. install filament language dan env dan timezone 'id'
+-   [x] 10. filament panel app dan admin - login
+-   [x] 11. Setting Tenant pada dashboard admin
+-   [x] 12. create tenant pada dashboard app
+-   [x] 13. install filament shield
+-   [x] 14. install filament themes
+-   [x] 15. panel app resource user
+-   [x] 16. panel app resource role
+-   [x] 17. panel app resource permission
+-   [x] 18. Resource bahan dan alat
+-   [x] 19. Resource produk
+-   [x] 20. Resource pelanggan
+-   [x] 21. Resource transaksi
+-   [x] 22. Resource POS
+-   [x] 23. Dashboard app
+-   [x] 24. Dashboard admin
+-   [x] 25. Relasi Vendor
+-   [] 26. perbaikian pos dan databasenya
 
 Berikut perbedaan komponen-komponen Laravel dalam bahasa Indonesia:
 

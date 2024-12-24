@@ -7,9 +7,12 @@ use Filament\Panel;
 use Filament\Widgets;
 use App\Models\Vendor;
 use Filament\PanelProvider;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
+use Illuminate\Support\Facades\Auth;
+use Filament\Navigation\NavigationItem;
 use App\Http\Middleware\ApplyTenantScopes;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Pages\Tenancy\RegisterTeam;
@@ -23,7 +26,6 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
-use Illuminate\Support\Facades\Auth;
 
 class AppPanelProvider extends PanelProvider
 {
@@ -41,6 +43,7 @@ class AppPanelProvider extends PanelProvider
                 'primary' => Color::Red,
             ])
             ->login()
+            ->databaseNotifications()
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\\Filament\\App\\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\\Filament\\App\\Pages')
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
@@ -79,11 +82,12 @@ class AppPanelProvider extends PanelProvider
                 'profile' => MenuItem::make()
                     ->label('Edit vendor profile')
                     ->visible(fn() => Auth::user()->usertype === 'user' ||  Auth::user()->usertype === 'admin'),
-                // MenuItem::make()
-                //     ->label('Settings')
-                //     ->url(fn(): string => Settings::getUrl())
-                //     ->icon('heroicon-m-cog-8-tooth'),
-                // // ...
+                MenuItem::make()
+                    ->label('Point of Sale')
+                    ->icon('heroicon-o-shopping-cart')
+                    ->url(fn() => '/app/' . Filament::getTenant()->slug . '/pos')
+                    ->openUrlInNewTab()
+
             ])
             ->tenantMiddleware([
                 // Resource::scopeToTenant(true),

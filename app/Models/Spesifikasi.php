@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Spesifikasi extends Model
+class Spesifikasi extends BaseModel
 {
     protected $table = 'spesifikasis';
 
@@ -13,6 +13,12 @@ class Spesifikasi extends Model
         'nama_spesifikasi',
         'tipe_input',
         'satuan'
+    ];
+
+    const TIPE_INPUT = [
+        'number' => 'number',
+        'text' => 'text',
+        'select' => 'select'
     ];
 
     protected $casts = [
@@ -29,5 +35,20 @@ class Spesifikasi extends Model
     public function spesifikasiProduk()
     {
         return $this->hasMany(SpesifikasiProduk::class, 'spesifikasi_id');
+    }
+
+    public function isNumeric()
+    {
+        return $this->tipe_input === self::TIPE_INPUT['number'];
+    }
+
+    public function isText()
+    {
+        return $this->tipe_input === self::TIPE_INPUT['text'];
+    }
+
+    public function isSelect()
+    {
+        return $this->tipe_input === self::TIPE_INPUT['select'];
     }
 }

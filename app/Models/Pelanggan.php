@@ -12,7 +12,7 @@ class Pelanggan extends BaseModel
         'vendor_id',
         'kode',
         'nama',
-        'alamat',
+        'alamat', 
         'no_telp',
         'email',
         'transaksi_terakhir'

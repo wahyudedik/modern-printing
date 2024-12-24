@@ -79,16 +79,16 @@ class AlatResource extends Resource
                                     ->numeric()
                                     ->required()
                                     ->label('Kapasitas Cetak/Jam'),
-                                Forms\Components\TextInput::make('tersedia')
-                                    ->maxLength(255),
+                                Forms\Components\Select::make('tersedia')
+                                    ->options([
+                                        'ya' => 'Ya',
+                                        'tidak' => 'Tidak',
+                                        'belum_diketahui' => 'Belum Diketahui',
+                                        'antrian' => 'Antrian',
+                                    ])
+                                    ->required(),
                             ]),
                     ]),
-                Forms\Components\Section::make('Keterangan Tambahan')
-                    ->schema([
-                        Forms\Components\Textarea::make('keterangan')
-                            ->rows(3),
-                    ])
-                    ->collapsible()
             ]);
     }
 
@@ -103,10 +103,6 @@ class AlatResource extends Resource
                     ->sortable()
                     ->weight('bold')
                     ->copyable(),
-                Tables\Columns\TextColumn::make('vendor.nama')
-                    ->searchable()
-                    ->sortable()
-                    ->icon('heroicon-m-building-office'),
                 Tables\Columns\TextColumn::make('merk')
                     ->wrap()
                     ->searchable()

@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\ProdukResource\Pages;
 use App\Filament\App\Resources\ProdukResource\RelationManagers;
+use App\Filament\App\Resources\BahanResource\RelationManagers\WholesalePriceRelationManager;
 use App\Filament\App\Resources\ProdukResource\RelationManagers\SpesifikasiProdukRelationManager;
 
 class ProdukResource extends Resource
@@ -135,7 +136,7 @@ class ProdukResource extends Resource
                     ->formatStateUsing(function ($record) {
                         $specs = [];
                         $record->spesifikasiProduk->each(function ($spek) use (&$specs) {
-                            $specs[] = "{$spek->spesifikasi->nama_spesifikasi}: " . implode(', ', $spek->pilihan);
+                            $specs[] = "{$spek->spesifikasi->nama_spesifikasi}: " . (is_array($spek->pilihan) ? implode(', ', $spek->pilihan) : $spek->pilihan);
                         });
                         return implode(' | ', $specs);
                     }),
@@ -238,6 +239,7 @@ class ProdukResource extends Resource
     {
         return [
             SpesifikasiProdukRelationManager::class,
+            // WholesalePriceRelationManager::class,
         ];
     }
 

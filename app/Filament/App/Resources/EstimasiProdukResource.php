@@ -24,7 +24,7 @@ class EstimasiProdukResource extends Resource
     protected static bool $isScopedToTenant = true;
     protected static ?string $tenantOwnershipRelationshipName = 'vendor';
     protected static ?string $tenantRelationshipName = 'estimasiProduk';
-    protected static ?string $navigationGroup = 'Alat';
+    protected static ?string $navigationGroup = 'Bahan dan Alat';
     protected static ?string $navigationIcon = 'heroicon-o-clock';
 
     public static function form(Form $form): Form
@@ -37,13 +37,13 @@ class EstimasiProdukResource extends Resource
                         Forms\Components\Group::make()
                             ->schema([
                                 Forms\Components\Select::make('produk_id')
-                                    ->relationship('produk', 'nama')
+                                    ->relationship('produk', 'nama_produk')
                                     ->required()
                                     ->searchable()
                                     ->preload()
                                     ->label('Produk'),
                                 Forms\Components\Select::make('alat_id')
-                                    ->relationship('alat', 'nama')
+                                    ->relationship('alat', 'nama_alat')
                                     ->required()
                                     ->searchable()
                                     ->preload()
@@ -70,16 +70,16 @@ class EstimasiProdukResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('produk.nama')
+                Tables\Columns\TextColumn::make('produk.nama_produk')
                     ->label('Produk')
                     ->searchable()
                     ->sortable()
-                    ->description(fn(EstimasiProduk $record): string => $record->produk->deskripsi ?? '-'),
-                Tables\Columns\TextColumn::make('alat.nama')
+                    ->description(fn(EstimasiProduk $record): string => strip_tags($record->produk->deskripsi) ?? '-'),
+                Tables\Columns\TextColumn::make('alat.nama_alat')
                     ->label('Alat')
                     ->searchable()
                     ->sortable()
-                    ->description(fn(EstimasiProduk $record): string => $record->alat->deskripsi ?? '-'),
+                    ->description(fn(EstimasiProduk $record): string => $record->alat->spesifikasi ?? '-'),
                 Tables\Columns\TextColumn::make('waktu_persiapan')
                     ->label('Waktu Persiapan')
                     ->sortable()

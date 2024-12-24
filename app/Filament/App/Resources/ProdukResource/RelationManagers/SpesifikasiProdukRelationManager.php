@@ -41,15 +41,15 @@ class SpesifikasiProdukRelationManager extends RelationManager
                                         '0' => 'Tidak'
                                     ])
                                     ->required(),
-
                                 Select::make('pilihan')
                                     ->multiple()
+                                    ->relationship('bahans', 'nama_bahan')
                                     ->options(function () {
                                         return Bahan::where('vendor_id', Filament::getTenant()->id)
-                                            ->pluck('nama_bahan', 'id')
-                                            ->toArray();
+                                            ->pluck('nama_bahan', 'id');
                                     })
-                                    ->default(null),
+                                    ->preload()
+                                    ->searchable()
                             ])
                             ->columns(2)
                     ])
@@ -70,21 +70,12 @@ class SpesifikasiProdukRelationManager extends RelationManager
                     ->label('Wajib Diisi')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('pilihan')
-                    ->label('Pilihan')
+                Tables\Columns\TextColumn::make('bahans.nama_bahan')
+                    ->label('Pilihan Material')
                     ->badge()
                     ->searchable()
-                    ->getStateUsing(function (SpesifikasiProduk $record) {
-                        $specs = $record->pilihan;
-                        if (!is_array($specs)) {
-                            return [];
-                        }
-
-                        return array_map(function ($value, $key) {
-                            return "{$key}: {$value}";
-                        }, $specs, array_keys($specs));
-                    })
-                    ->sortable(),
+                    ->sortable()
+                    ->formatStateUsing(fn($state, $record) => $record->bahans->pluck('nama_bahan')),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat Pada')
                     ->dateTime()

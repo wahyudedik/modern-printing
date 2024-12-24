@@ -47,7 +47,7 @@ class SpesifikasiResource extends Resource
                                         'text' => 'Text',
                                         'number' => 'Number',
                                         'select' => 'Select',
-                                        'checkbox' => 'Checkbox',
+                                        // 'checkbox' => 'Checkbox',
                                     ])
                                     ->label('Tipe Input')
                                     ->helperText('Pilih tipe input untuk spesifikasi ini'),

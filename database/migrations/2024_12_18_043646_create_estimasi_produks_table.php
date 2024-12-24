@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
             $table->foreignId('produk_id')->constrained('produks')->cascadeOnDelete();
             $table->foreignId('alat_id')->constrained('alats')->cascadeOnDelete();
-            $table->integer('waktu_persiapan');
+            $table->integer('waktu_persiapan'); 
             $table->integer('waktu_produksi_per_unit');
             $table->timestamps();
         });

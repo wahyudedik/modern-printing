@@ -36,7 +36,7 @@ class Produk extends BaseModel
         return $this->hasMany(SpesifikasiProduk::class, 'produk_id');
     }
 
-    public function wholesaleProce()
+    public function wholesalePrice()
     {
         return $this->hasMany(WholesalePrice::class, 'produk_id');
     }
@@ -58,5 +58,4 @@ class Produk extends BaseModel
         });
         return $specs;
     }
-
 }

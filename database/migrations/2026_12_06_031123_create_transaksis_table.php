@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string('payment_method');
             $table->string('estimasi_selesai');
             $table->date('tanggal_dibuat');
+            $table->integer('progress_percentage')->default(0);
+            $table->string('current_stage')->nullable();
             $table->timestamps();
         });
 
@@ -37,7 +39,7 @@ return new class extends Migration
             $table->timestamps();
         });
     }
-    
+
     /**
      * Reverse the migrations.
      */
