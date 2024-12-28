@@ -13,7 +13,13 @@ class ListBahans extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->label('Tambah Bahan')->icon('heroicon-o-plus'),
+            Actions\CreateAction::make()
+                ->label('Tambah Bahan')
+                ->icon('heroicon-o-plus')
+                ->color('primary')
+                ->tooltip('Klik untuk menambah bahan baru')
+                ->modalWidth('lg')
+                ->slideOver(),
         ];
     }
 }

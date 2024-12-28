@@ -22,6 +22,9 @@ class WholesalePriceRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\Section::make('Wholesale Price Details')
+                    ->description('Set up wholesale pricing details for this material')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->collapsible()
                     ->schema([
                         Forms\Components\Group::make()
                             ->schema([
@@ -31,13 +34,17 @@ class WholesalePriceRelationManager extends RelationManager
                                     ->label('Minimum Quantity')
                                     ->numeric()
                                     ->required()
-                                    ->minValue(1),
+                                    ->minValue(1)
+                                    ->hint('Minimum order quantity for wholesale price')
+                                    ->suffixIcon('heroicon-m-cube'),
                                 Forms\Components\TextInput::make('max_quantity')
                                     ->label('Maximum Quantity')
                                     ->numeric()
                                     ->minValue(1)
-                                    ->placeholder('Unlimited'),
-                            ])->columns(2),
+                                    ->placeholder('Unlimited')
+                                    ->hint('Leave empty for unlimited quantity')
+                                    ->suffixIcon('heroicon-m-cube-transparent'),
+                            ])->columns(1),
                         Forms\Components\Group::make()
                             ->schema([
                                 Forms\Components\TextInput::make('harga')
@@ -46,11 +53,21 @@ class WholesalePriceRelationManager extends RelationManager
                                     ->required()
                                     ->prefix('Rp')
                                     ->minValue(0)
-                                    ->step(0.01),
+                                    ->step(0.01)
+                                    ->hint('Enter the wholesale price per unit')
+                                    ->suffixIcon('heroicon-m-banknotes'),
                                 Forms\Components\Select::make('produk_id')
                                     ->label('Product')
                                     ->required()
-                                    ->relationship('produk', 'nama_produk'),
+                                    ->relationship('produk', 'nama_produk')
+                                    ->searchable()
+                                    ->preload()
+                                    ->createOptionForm([
+                                        Forms\Components\TextInput::make('nama_produk')
+                                            ->required()
+                                            ->maxLength(255),
+                                    ])
+                                    ->suffixIcon('heroicon-m-shopping-bag'),
                             ])->columns(1),
                     ])
             ]);
@@ -65,38 +82,46 @@ class WholesalePriceRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('min_quantity')
                     ->label('Minimum Quantity')
                     ->numeric()
-                    ->description('Minimum quantity required for wholesale price')
+                    ->description(fn($record): string => "Minimum quantity required: {$record->min_quantity} units")
+                    ->icon('heroicon-m-cube')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('max_quantity')
                     ->label('Maximum Quantity')
                     ->numeric()
-                    ->description('Maximum quantity limit (optional)')
+                    ->description(fn($record) => $record->max_quantity ? "Maximum limit: {$record->max_quantity} units" : 'No upper limit')
+                    ->icon('heroicon-m-cube-transparent')
                     ->sortable()
-                    ->placeholder('Unlimited'),
+                    ->placeholder('∞'),
                 Tables\Columns\TextColumn::make('harga')
                     ->label('Price Per Unit')
-                    ->description('Wholesale price per unit')
+                    ->money('IDR')
+                    ->description(fn($record): string => "Wholesale price: Rp " . number_format($record->harga, 0, ',', '.'))
+                    ->icon('heroicon-m-banknotes')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('bahan.nama_bahan')
                     ->label('Material')
-                    ->description('Associated material')
+                    ->description(fn($record): string => "Material: {$record->bahan->nama_bahan}")
+                    ->icon('heroicon-m-beaker')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('produk.nama_produk')
                     ->label('Produk')
-                    ->description('Associated produk')
+                    ->description(fn($record): string => "Product: {$record->produk->nama_produk}")
+                    ->icon('heroicon-m-shopping-bag')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created At')
-                    ->dateTime()
-                    ->description('Record creation date')
+                    ->dateTime('d M Y H:i')
+                    ->description(fn($record): string => "Created: " . $record->created_at->diffForHumans())
+                    ->icon('heroicon-m-clock')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Updated At')
-                    ->dateTime()
-                    ->description('Last update date')
+                    ->dateTime('d M Y H:i')
+                    ->description(fn($record): string => "Updated: " . $record->updated_at->diffForHumans())
+                    ->icon('heroicon-m-arrow-path')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
             ])
@@ -107,13 +132,27 @@ class WholesalePriceRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make()->icon('heroicon-s-plus')->label('Tambah Harga Grosir'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->icon('heroicon-m-pencil-square')
+                    ->color('warning')
+                    ->tooltip('Edit harga grosir')
+                    ->modalWidth('lg'),
+                Tables\Actions\DeleteAction::make()
+                    ->icon('heroicon-m-trash')
+                    ->color('danger')
+                    ->tooltip('Hapus harga grosir')
+                    ->modalDescription('Apakah Anda yakin ingin menghapus harga grosir ini? Tindakan ini tidak dapat dibatalkan.')
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->icon('heroicon-m-trash')
+                        ->color('danger')
+                        ->modalDescription('Apakah Anda yakin ingin menghapus semua harga grosir yang dipilih? Tindakan ini tidak dapat dibatalkan.')
+                        ->deselectRecordsAfterCompletion()
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->poll('10s');
     }
 }

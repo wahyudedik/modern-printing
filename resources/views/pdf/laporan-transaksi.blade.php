@@ -2,153 +2,212 @@
 <html>
 
 <head>
-    <title>Laporan Transaksi</title>
+    <title>Transaction Report</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             margin: 40px;
-            background-color: #f8fafc;
             color: #1f2937;
+            line-height: 1.5;
+            background-color: #f9fafb;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
+            margin-bottom: 40px;
             border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 20px;
+            background-color: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .header h2 {
-            color: #1f2937;
+            margin: 0;
+            color: #111827;
             font-size: 28px;
-            margin-bottom: 10px;
+            font-weight: 600;
         }
 
-        .header p {
-            color: #6b7280;
-            font-size: 14px;
+        .company-info {
+            margin-top: 12px;
+            color: #4b5563;
+            font-size: 16px;
+        }
+
+        .report-meta {
+            margin-bottom: 30px;
+            font-size: 15px;
+            background-color: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
+            margin-bottom: 30px;
             background-color: white;
-            border-radius: 8px;
+            border-radius: 12px;
+            overflow: hidden;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         th,
         td {
-            padding: 12px 16px;
-            text-align: left;
-            font-size: 13px;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            font-size: 14px;
         }
 
         th {
-            background-color: #f9fafb;
+            background-color: #f8fafc;
             font-weight: 600;
-            color: #374151;
             text-transform: uppercase;
-            font-size: 12px;
             letter-spacing: 0.05em;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
+            color: #374151;
         }
 
         tr:hover {
             background-color: #f9fafb;
         }
 
-        .badge {
-            padding: 4px 8px;
-            border-radius: 6px;
+        .summary-section {
+            margin-top: 40px;
+            background-color: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-section h3 {
+            margin-top: 0;
+            color: #111827;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 9999px;
             font-size: 12px;
             font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.05em;
         }
 
-        .warning {
-            background-color: #fef3c7;
+        .status-pending {
+            background: #fef3c7;
             color: #92400e;
         }
 
-        .success {
-            background-color: #d1fae5;
+        .status-success {
+            background: #d1fae5;
             color: #065f46;
         }
 
-        .danger {
-            background-color: #fee2e2;
+        .status-failed {
+            background: #fee2e2;
             color: #991b1b;
         }
 
-        .product-list {
+        .product-list,
+        .material-list {
             margin: 0;
             padding: 0;
             list-style: none;
         }
 
-        .product-item {
-            padding: 2px 0;
+        .product-list li,
+        .material-list li {
+            padding: 4px 0;
             color: #4b5563;
         }
 
-        .price {
+        .total-price {
+            font-weight: 600;
+            color: #059669;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-item {
+            background-color: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .summary-item p {
+            margin: 0;
+            font-size: 24px;
             font-weight: 600;
             color: #1f2937;
+        }
+
+        .summary-item span {
+            font-size: 14px;
+            color: #6b7280;
         }
     </style>
 </head>
 
 <body>
     <div class="header">
-        <h2>Laporan Transaksi</h2>
-        <p>Periode: {{ \Carbon\Carbon::parse($fromDate)->format('d M Y') }} -
-            {{ \Carbon\Carbon::parse($untilDate)->format('d M Y') }}</p>
+        <h2>Transaction Report</h2>
+        <div class="company-info">
+            {{ auth()->user()->vendor->first()->name }}
+        </div>
+    </div>
+
+    <div class="report-meta">
+        <strong>Period:</strong> {{ \Carbon\Carbon::parse($fromDate)->format('d M Y') }} -
+        {{ \Carbon\Carbon::parse($untilDate)->format('d M Y') }}
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Pelanggan</th>
-                <th>Produk</th>
-                <th>Total Qty</th>
-                <th>Total Harga</th>
-                <th>Pembayaran</th>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Products</th>
+                <th>Materials</th>
+                <th>Quantity</th>
+                <th>Total Price</th>
                 <th>Status</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($transactions as $transaction)
                 <tr>
-                    <td>
-                        @foreach ($transaction->pelanggan as $pelanggan)
-                            {{ $pelanggan->nama }}
-                        @endforeach
-                    </td>
+                    <td>{{ $transaction->kode }}</td>
+                    <td>{{ $transaction->pelanggan->nama }}</td>
                     <td>
                         <ul class="product-list">
-                            @foreach ($transaction->produk as $produk)
-                                <li class="product-item">• {{ $produk->nama_produk }}</li>
+                            @foreach ($transaction->transaksiItem as $item)
+                                <li>{{ $item->produk->nama_produk }}</li>
                             @endforeach
                         </ul>
                     </td>
-                    <td>{{ $transaction->total_qty }}</td>
-                    <td class="price">Rp {{ number_format($transaction->total_harga, 0, ',', '.') }}</td>
                     <td>
-                        <span
-                            class="badge {{ $transaction->metode_pembayaran === 'transfer' ? 'warning' : ($transaction->metode_pembayaran === 'cash' ? 'success' : 'primary') }}">
-                            {{ strtoupper($transaction->metode_pembayaran) }}
-                        </span>
+                        <ul class="material-list">
+                            @foreach ($transaction->transaksiItem as $item)
+                                <li>{{ $item->bahan->nama_bahan }}</li>
+                            @endforeach
+                        </ul>
                     </td>
+                    <td>{{ $transaction->transaksiItem->sum('kuantitas') }}</td>
+                    <td class="total-price">Rp {{ number_format($transaction->total_harga, 0, ',', '.') }}</td>
                     <td>
-                        <span
-                            class="badge {{ $transaction->status === 'pending' ? 'warning' : ($transaction->status === 'success' ? 'success' : 'danger') }}">
+                        <span class="status-badge status-{{ $transaction->status }}">
                             {{ strtoupper($transaction->status) }}
                         </span>
                     </td>
@@ -156,6 +215,27 @@
             @endforeach
         </tbody>
     </table>
+
+    <div class="summary-section">
+        <h3>Summary</h3>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <p>{{ $transactions->count() }}</p>
+                <span>Total Transactions</span>
+            </div>
+            <div class="summary-item">
+                <p>Rp {{ number_format($transactions->sum('total_harga'), 0, ',', '.') }}</p>
+                <span>Total Revenue</span>
+            </div>
+            <div class="summary-item">
+                <p>{{ $transactions->sum(function ($t) {
+                    return $t->transaksiItem->sum('kuantitas');
+                }) }}
+                </p>
+                <span>Total Items Sold</span>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

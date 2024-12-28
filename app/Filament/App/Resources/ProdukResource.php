@@ -53,32 +53,67 @@ class ProdukResource extends Resource
                 Forms\Components\Group::make()
                     ->schema([
                         Forms\Components\Section::make('Gambar Produk')
+                            ->description('Upload gambar produk dengan kualitas terbaik')
+                            ->icon('heroicon-o-photo')
+                            ->collapsible()
                             ->schema([
                                 Forms\Components\FileUpload::make('gambar')
                                     ->multiple()
                                     ->reorderable()
                                     ->imageEditor()
-                                    ->imagePreviewHeight('100')
+                                    ->imagePreviewHeight('250')
                                     ->directory('produk-images')
                                     ->maxFiles(5)
                                     ->required()
                                     ->columnSpanFull()
                                     ->imageEditorViewportWidth(3)
-                                    ->imageEditorViewportHeight(3),
+                                    ->imageEditorViewportHeight(3)
+                                    ->downloadable()
+                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                                    ->helperText('Format yang didukung: JPG, PNG, WEBP. Maksimal 5 gambar.')
+                                    ->panelAspectRatio('16:9'),
                             ]),
                         Forms\Components\Section::make('Informasi Produk')
+                            ->description('Masukkan informasi detail produk')
+                            ->icon('heroicon-o-shopping-bag')
+                            ->collapsible()
                             ->schema([
                                 Forms\Components\TextInput::make('nama_produk')
                                     ->required()
-                                    ->maxLength(255),
+                                    ->maxLength(255)
+                                    ->placeholder('Masukkan nama produk')
+                                    ->live(onBlur: true)
+                                    ->autofocus(),
                                 Forms\Components\Select::make('kategori_id')
                                     ->relationship('kategori', 'nama_kategori')
+                                    ->searchable()
+                                    ->preload()
                                     ->createOptionForm([
                                         Forms\Components\Hidden::make('vendor_id')
                                             ->default(Filament::getTenant()->id),
                                         Forms\Components\TextInput::make('nama_kategori')
                                             ->required()
                                             ->live(onBlur: true)
+                                            ->placeholder('Masukkan nama kategori')
+                                            ->afterStateUpdated(function ($state, callable $set) {
+                                                $set('slug', Str::slug($state));
+                                            })
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('slug')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->prefix('/')
+                                            ->disabled()
+                                            ->dehydrated()
+                                            ->helperText('Slug akan terisi otomatis'),
+                                    ])
+                                    ->editOptionForm([
+                                        Forms\Components\Hidden::make('vendor_id')
+                                            ->default(Filament::getTenant()->id),
+                                        Forms\Components\TextInput::make('nama_kategori')
+                                            ->required()
+                                            ->live(onBlur: true)
+                                            ->placeholder('Masukkan nama kategori')
                                             ->afterStateUpdated(function ($state, callable $set) {
                                                 $set('slug', Str::slug($state));
                                             })
@@ -95,16 +130,33 @@ class ProdukResource extends Resource
                                 Forms\Components\TextInput::make('harga_dasar')
                                     ->required()
                                     ->numeric()
-                                    ->prefix('Rp'),
+                                    ->prefix('Rp')
+                                    ->placeholder('0')
+                                    ->live(onBlur: true),
                             ]),
                     ])->columnSpanFull(),
                 Forms\Components\Group::make()
                     ->schema([
                         Forms\Components\Section::make('Deskripsi')
+                            ->description('Tambahkan deskripsi lengkap produk')
+                            ->icon('heroicon-o-document-text')
+                            ->collapsible()
                             ->schema([
                                 Forms\Components\RichEditor::make('deskripsi')
                                     ->required()
-                                    ->columnSpanFull(),
+                                    ->columnSpanFull()
+                                    ->placeholder('Tuliskan deskripsi produk disini...')
+                                    ->toolbarButtons([
+                                        'bold',
+                                        'italic',
+                                        'underline',
+                                        'strike',
+                                        'link',
+                                        'bulletList',
+                                        'orderedList',
+                                        'undo',
+                                        'redo',
+                                    ]),
                             ])
                     ])->columnSpanFull(),
             ]);
@@ -117,20 +169,28 @@ class ProdukResource extends Resource
                 Tables\Columns\ImageColumn::make('gambar')
                     ->circular()
                     ->stacked()
-                    ->limit(3),
+                    ->limit(3)
+                    ->defaultImageUrl(url('images/placeholder.jpg'))
+                    ->ring(2)
+                    ->overlap(4),
                 Tables\Columns\TextColumn::make('nama_produk')
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
                     ->size('lg')
-                    ->description(fn(Produk $record): string => strip_tags($record->deskripsi)),
+                    ->description(fn(Produk $record): string => Str::limit(strip_tags($record->deskripsi), 50))
+                    ->wrap()
+                    ->copyable()
+                    ->copyMessage('Nama produk disalin')
+                    ->copyMessageDuration(1500),
                 Tables\Columns\TextColumn::make('kategori.nama_kategori')
                     ->label('Kategori')
                     ->searchable()
                     ->sortable()
                     ->badge()
                     ->icon('heroicon-m-tag')
-                    ->color('primary'),
+                    ->color('primary')
+                    ->tooltip('Kategori Produk'),
                 Tables\Columns\TextColumn::make('spesifikasiProduk')
                     ->label('Spesifikasi')
                     ->formatStateUsing(function ($record) {
@@ -139,19 +199,25 @@ class ProdukResource extends Resource
                             $specs[] = "{$spek->spesifikasi->nama_spesifikasi}: " . (is_array($spek->pilihan) ? implode(', ', $spek->pilihan) : $spek->pilihan);
                         });
                         return implode(' | ', $specs);
-                    }),
+                    })
+                    ->wrap()
+                    ->searchable()
+                    ->tooltip('Spesifikasi Produk')
+                    ->copyable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->label('Dibuat pada')
                     ->toggleable()
-                    ->since(),
+                    ->since()
+                    ->tooltip(fn($record) => $record->created_at->format('d M Y H:i:s')),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->label('Diubah pada')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
-                    ->since(),
+                    ->since()
+                    ->tooltip(fn($record) => $record->updated_at->format('d M Y H:i:s')),
             ])->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('kategori_id')
@@ -160,6 +226,31 @@ class ProdukResource extends Resource
                     ->multiple()
                     ->preload()
                     ->searchable(),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')
+                            ->label('Dibuat Dari')
+                            ->placeholder('Select date')
+                            ->closeOnDateSelection()
+                            ->native(false),
+                        Forms\Components\DatePicker::make('created_until')
+                            ->label('Dibuat Sampai')
+                            ->placeholder('Select date')
+                            ->closeOnDateSelection()
+                            ->native(false),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+                    ->columns(2),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -214,7 +305,6 @@ class ProdukResource extends Resource
                         ->action(function ($record) {
                             $duplicate = $record->replicate();
                             $duplicate->nama_produk = $duplicate->nama_produk . ' (copy)';
-                            $duplicate->slug = Str::slug($duplicate->nama_produk);
                             $duplicate->save();
                         })
                         ->successNotification(
@@ -230,8 +320,23 @@ class ProdukResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->modalIcon('heroicon-o-exclamation-triangle')
+                        ->modalDescription('Are you sure you want to delete these products? This action cannot be undone.')
+                        ->modalSubmitActionLabel('Yes, delete them')
+                        ->modalCancelActionLabel('No, cancel')
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('Products deleted')
+                                ->body('The selected products have been deleted successfully.')
+                        ),
+                ])
+                    ->tooltip('Bulk Actions')
+                    ->color('gray')
+                    ->icon('heroicon-m-chevron-down'),
             ]);
     }
 

@@ -52,6 +52,8 @@ class BahanResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->placeholder('Masukkan nama bahan')
+                            ->autocomplete('off')
+                            ->autofocus()
                             ->columnSpanFull(),
 
                         Forms\Components\Group::make()
@@ -62,21 +64,52 @@ class BahanResource extends Resource
                                     ->prefix('Rp')
                                     ->required()
                                     ->maxValue(9999999999)
-                                    ->placeholder('0'),
+                                    ->placeholder('0')
+                                    ->hint('Masukkan harga dalam Rupiah')
+                                    ->live(),
+                            ])->columnSpanFull(),
 
+                        Forms\Components\Group::make()
+                            ->schema([
                                 Forms\Components\TextInput::make('satuan')
                                     ->label('Satuan')
                                     ->required()
                                     ->maxLength(50)
-                                    ->placeholder('Contoh: m2, lembar'),
+                                    ->placeholder('Contoh: m2, lembar')
+                                    ->datalist([
+                                        'm2',
+                                        'lembar',
+                                        'roll',
+                                        'meter',
+                                        'yard',
+                                        'pcs',
+                                        'box',
+                                        'pack',
+                                        'botol',
+                                        'liter',
+                                        'galon',
+                                        'kaleng',
+                                        'set',
+                                        'unit',
+                                        'kg',
+                                        'gram'
+                                    ])
+                                    ->autocomplete('off'),
+                            ])->columnSpanFull(),
 
+                        Forms\Components\Group::make()
+                            ->schema([
                                 Forms\Components\TextInput::make('stok')
                                     ->label('Stok')
                                     ->numeric()
                                     ->nullable()
-                                    ->placeholder('Masukkan jumlah stok'),
-                            ])->columns(3),
+                                    ->placeholder('Masukkan jumlah stok')
+                                    ->suffixIcon('heroicon-m-cube')
+                                    ->live()
+                                    ->hint('Kosongkan jika tidak ada stok'),
+                            ])->columnSpanFull(),
                     ])->columns(2)
+                    ->collapsible()
             ]);
     }
 
@@ -87,37 +120,65 @@ class BahanResource extends Resource
                 Tables\Columns\TextColumn::make('nama_bahan')
                     ->label('Nama Bahan')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('medium')
+                    ->copyable()
+                    ->searchable(isIndividual: true)
+                    ->tooltip(fn($record) => "Nama Bahan: {$record->nama_bahan}")
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('harga_per_satuan')
                     ->label('Harga per Satuan')
-                    ->money('IDR')
-                    ->sortable(),
+                    ->money('IDR', true)
+                    ->sortable()
+                    ->alignment('center')
+                    ->color('success')
+                    ->icon('heroicon-m-currency-dollar')
+                    ->tooltip(fn($record) => "Harga: Rp " . number_format($record->harga_per_satuan, 0, ',', '.')),
                 Tables\Columns\TextColumn::make('satuan')
                     ->label('Satuan')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->badge()
+                    ->color('info')
+                    ->alignment('center')
+                    ->tooltip('Satuan Bahan'),
                 Tables\Columns\TextColumn::make('stok')
                     ->label('Stok')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->alignment('center')
+                    ->badge()
+                    ->color(fn($state) => $state > 10 ? 'success' : ($state > 0 ? 'warning' : 'danger'))
+                    ->description(fn($record) => $record->stok > 0 ? 'Tersedia' : 'Habis')
+                    ->tooltip(fn($record) => "Stok tersedia: {$record->stok}"),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Diperbarui')
-                    ->dateTime()
+                    ->dateTime('d M Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
+                    ->since()
+                    ->tooltip(fn($record) => $record->created_at->format('d M Y H:i:s')),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Diperbarui')
+                    ->dateTime('d M Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->since()
+                    ->tooltip(fn($record) => $record->updated_at->format('d M Y H:i:s'))
             ])->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\Filter::make('created_at')
                     ->form([
                         Forms\Components\DatePicker::make('created_from')
-                            ->label('Dibuat Dari'),
+                            ->label('Dibuat Dari')
+                            ->native(false)
+                            ->closeOnDateSelection()
+                            ->displayFormat('d/m/Y'),
                         Forms\Components\DatePicker::make('created_until')
-                            ->label('Dibuat Sampai'),
+                            ->label('Dibuat Sampai')
+                            ->native(false)
+                            ->closeOnDateSelection()
+                            ->displayFormat('d/m/Y'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
@@ -133,16 +194,30 @@ class BahanResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\ViewAction::make()
+                        ->icon('heroicon-m-eye')
+                        ->color('info')
+                        ->tooltip('Lihat Detail'),
+                    Tables\Actions\EditAction::make()
+                        ->icon('heroicon-m-pencil-square')
+                        ->color('warning')
+                        ->tooltip('Edit Data'),
                     Tables\Actions\DeleteAction::make()
+                        ->icon('heroicon-m-trash')
+                        ->color('danger')
+                        ->tooltip('Hapus Data')
                         ->modalDescription('Apakah anda yakin ingin menghapus data ini?')
                 ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->modalDescription('Apakah anda yakin ingin menghapus data yang dipilih?'),
+                        ->icon('heroicon-m-trash')
+                        ->color('danger')
+                        ->modalHeading('Hapus Data Terpilih')
+                        ->modalDescription('Apakah anda yakin ingin menghapus data yang dipilih?')
+                        ->modalSubmitActionLabel('Ya, Hapus')
+                        ->modalCancelActionLabel('Batal'),
                 ]),
             ]);
     }

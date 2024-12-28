@@ -10,61 +10,98 @@ use Illuminate\Http\Request;
 use App\Models\TransaksiItem;
 use App\Models\EstimasiProduk;
 use Filament\Facades\Filament;
+use App\Models\SpesifikasiProduk;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class CheckoutController extends Controller
 {
     public function process(Request $request)
     {
+        $vendor = \App\Models\Vendor::where('slug', request()->route('tenant'))->firstOrFail();
+
         DB::beginTransaction();
+
+        $request->validate([
+            'pelanggan_id' => 'required|exists:pelanggans,id',
+            'payment_method' => 'required|in:cash,transfer,qris'
+        ]);
+
         try {
-            // Reserve stock for each item
-            foreach (session('cart') as $item) {
-                $bahan = Bahan::find($item['specifications']['bahan_id']);
-                if ($bahan && $bahan->stok < $item['quantity']) {
-                    throw new \Exception("Insufficient stock for {$bahan->nama_bahan}");
-                }
+            $cart = session('cart');
+            if (empty($cart)) {
+                throw new \Exception('Cart is empty');
             }
 
+            // Calculate total with verification
+            $totalHarga = collect($cart)->sum(function ($item) {
+                $baseTotal = $item['base_price'] * $item['quantity'];
+                $specTotal = collect($item['specifications'])->sum(function ($spec) use ($item) {
+                    return $spec['harga_per_satuan'] * $item['quantity'];
+                });
+                return $baseTotal + $specTotal;
+            });
+
             $transaksi = Transaksi::create([
-                'vendor_id' => Filament::getTenant()->id,
+                'vendor_id' => $vendor->id, // Use vendor ID directly
                 'kode' => 'TRX-' . date('YmdHis'),
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
                 'pelanggan_id' => $request->pelanggan_id,
-                'total_harga' => collect(session('cart'))->sum('total_price'),
+                'total_harga' => $totalHarga,
                 'status' => 'pending',
                 'payment_method' => $request->payment_method,
-                'estimasi_selesai' => $this->calculateEstimatedCompletion(session('cart')),
-                'tanggal_dibuat' => now()
+                'estimasi_selesai' => $this->calculateEstimatedCompletion($cart),
+                'tanggal_dibuat' => now(),
+                'progress_percentage' => 0,
+                'current_stage' => 'pending'
             ]);
 
-            foreach (session('cart') as $item) {
+            foreach ($cart as $item) {
+                $firstSpec = collect($item['specifications'])->first();
+
                 TransaksiItem::create([
-                    'vendor_id' => Filament::getTenant()->id,
+                    'vendor_id' => $vendor->id,
                     'transaksi_id' => $transaksi->id,
                     'produk_id' => $item['product_id'],
-                    'bahan_id' => $item['specifications']['bahan_id'],
+                    'bahan_id' => $firstSpec['bahan_id'],
                     'kuantitas' => $item['quantity'],
                     'harga_satuan' => $item['base_price'],
                     'spesifikasi' => $item['specifications']
                 ]);
             }
 
+            // Update customer's last transaction timestamp
+            $pelanggan = Pelanggan::find($request->pelanggan_id);
+            $pelanggan->update([
+                'transaksi_terakhir' => now()
+            ]);
+
             DB::commit();
             session()->forget('cart');
 
-            return redirect()->route('pos.invoice', [
-                'tenant' => request()->route('tenant'),
-                'transaksi' => $transaksi->id
+            return response()->json([
+                'success' => true,
+                'invoiceUrl' => route('pos.invoice.download', [
+                    'tenant' => request()->route('tenant'),
+                    'transaksi' => $transaksi->id
+                ]),
+                'redirectUrl' => route('pos.index', [
+                    'tenant' => request()->route('tenant')
+                ])
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
         }
     }
 
     private function calculateEstimatedCompletion($cartItems)
     {
         $equipmentSchedule = [];
+        $maxCompletionTime = now(); // Start with current time as Carbon instance
 
         foreach ($cartItems as $item) {
             $estimasiProduk = EstimasiProduk::where('produk_id', $item['product_id'])->first();
@@ -78,10 +115,15 @@ class CheckoutController extends Controller
             }
 
             $startTime = $equipmentSchedule[$alat->id];
-            $equipmentSchedule[$alat->id] = $startTime->addMinutes($productionTime);
+            $equipmentSchedule[$alat->id] = Carbon::parse($startTime)->addMinutes($productionTime);
+
+            // Update max completion time
+            if ($equipmentSchedule[$alat->id]->gt($maxCompletionTime)) {
+                $maxCompletionTime = $equipmentSchedule[$alat->id];
+            }
         }
 
-        return collect($equipmentSchedule)->max();
+        return $maxCompletionTime;
     }
 
 

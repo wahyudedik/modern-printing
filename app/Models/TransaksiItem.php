@@ -42,4 +42,16 @@ class TransaksiItem extends BaseModel
     {
         return $this->belongsTo(Bahan::class, 'bahan_id');
     }
+
+    protected static function booted()
+    {
+        static::created(function ($transaksiItem) {
+            $bahan = Bahan::find($transaksiItem->bahan_id);
+            if ($bahan) {
+                $bahan->decrement('stok', $transaksiItem->kuantitas);
+                $bahan->checkStockLevel(); // Trigger notifikasi stok rendah jika diperlukan
+            }
+        });
+    }
+
 }

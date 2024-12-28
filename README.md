@@ -10,9 +10,12 @@
 <p>php artisan shield:super-admin</p>
 
 bug :
-8. laporan belum fix untuk tabelnya
+10. kolom transaksis item belum fix yang error edit, lihat dan create
+12. fitur pengurangan stok bahan belum fix
+13. fitur grosir belum fix
+14. fitur aktif dan non aktif akun belum fix
 
-POS System Flow:
+POS System Flow: 
 
 1. Perbaikan alur transaksi POS:
 
@@ -139,9 +142,9 @@ Berikut perbedaan komponen-komponen Laravel dalam bahasa Indonesia:
 
 ### Event
 
--   Notifications when something occurs
--   Can trigger multiple listeners
--   Enables loose coupling between components
+-   Notifications when something occurs / Notifikasi ketika sesuatu terjadi
+-   Can trigger multiple listeners / Dapat memicu beberapa pendengar
+-   Enables loose coupling between components / Memungkinkan pengaitan longgar antar komponen
 
 ### Rule
 

@@ -22,14 +22,14 @@ Route::get('/account/inactive', function () {
         ApplyTenantScopes::class
     ]);
 
-Route::get('/transaksi/print/{record}', function ($record) {
-    return view('transaksi.print', compact('record'));
-})
-    ->name('transaksi.print')
-    ->middleware([
-        Authenticate::class . ':app',
-        ApplyTenantScopes::class
-    ]);
+// Route::get('/transaksi/print/{record}', function ($record) {
+//     return view('transaksi.print', compact('record'));
+// })
+//     ->name('transaksi.print')
+//     ->middleware([
+//         Authenticate::class . ':app',
+//         ApplyTenantScopes::class
+//     ]);
 
 
 Route::middleware([
@@ -50,10 +50,6 @@ Route::middleware([
         ->name('pos.removeItem');
     Route::get('/app/{tenant}/pos/cart/clear', [PosController::class, 'clearCart'])
         ->name('pos.clearCart');
-    Route::get('/app/{tenant}/pos/invoice/{transaksi}', [PosController::class, 'invoice'])
-        ->name('pos.invoice');
-    Route::get('/app/{tenant}/pos/invoice/{transaksi}/print', [InvoiceController::class, 'print'])
-        ->name('pos.invoice.print');
     Route::post('/app/{tenant}/pos/calculate-price', [PosController::class, 'calculatePrice'])
         ->name('pos.calculatePrice');
     Route::get('/app/{tenant}/pos/checkout', [CheckoutController::class, 'show'])
@@ -62,4 +58,6 @@ Route::middleware([
         ->name('pos.checkout.process');
     Route::post('/app/{tenant}/pos/customer/create', [CheckoutController::class, 'createCustomer'])
         ->name('pos.customer.create');
+    Route::get('/app/{tenant}/pos/invoice/{transaksi}/download', [InvoiceController::class, 'download'])
+        ->name('pos.invoice.download');
 });

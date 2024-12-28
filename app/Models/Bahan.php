@@ -8,9 +8,9 @@ use Filament\Notifications\Actions\Action;
 
 class Bahan extends BaseModel
 {
-    protected $table = 'bahans'; 
+    protected $table = 'bahans';
 
-    protected $fillable = [ 
+    protected $fillable = [
         'vendor_id',
         'nama_bahan',
         'harga_per_satuan',
@@ -21,7 +21,7 @@ class Bahan extends BaseModel
     protected $casts = [
         'harga_per_satuan' => 'decimal:2',
         'stok' => 'string'
-    ];    
+    ];
     public function vendor()
     {
         return $this->belongsTo(Vendor::class, 'vendor_id');
@@ -53,12 +53,14 @@ class Bahan extends BaseModel
                 ->actions([
                     Action::make('restock')
                         ->button()
-                        ->url(route('filament.app.resources.bahans.edit', $this->id))
+                        ->url(route('filament.app.resources.bahans.edit', [
+                            'tenant' => $this->vendor->slug,
+                            'record' => $this->id
+                        ]))
                         ->color('warning')
                 ])
                 ->persistent()
-                ->sendToDatabase($this->vendor->users);
+                ->sendToDatabase($this->vendor->members);
         }
     }
-
 }

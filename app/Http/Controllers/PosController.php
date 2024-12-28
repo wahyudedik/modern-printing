@@ -62,16 +62,17 @@ class PosController extends Controller
         $product = Produk::findOrFail($request->product_id);
         $quantity = $request->quantity;
         $specifications = $request->specifications;
-        $totalPrice = $product->harga_dasar;
+        $basePrice = $product->harga_dasar * $quantity; // Multiply base price by quantity
         $specDetails = [];
+        $totalSpecPrice = 0;
 
         foreach ($specifications as $specId => $value) {
             $spesifikasiProduk = SpesifikasiProduk::with(['spesifikasi', 'bahans'])->find($specId);
             $bahan = Bahan::find($value);
 
             if ($spesifikasiProduk && $bahan) {
-                $specPrice = $spesifikasiProduk->calculatePrice($value, $bahan->id, $quantity);
-                $totalPrice += $specPrice;
+                $specPrice = $bahan->harga_per_satuan * $quantity; // Multiply spec price by quantity
+                $totalSpecPrice += $specPrice;
 
                 $specDetails[$specId] = [
                     'value' => $value,
@@ -88,7 +89,7 @@ class PosController extends Controller
             'base_price' => $product->harga_dasar,
             'quantity' => $quantity,
             'specifications' => $specDetails,
-            'total_price' => $totalPrice,
+            'total_price' => $basePrice + $totalSpecPrice,
             'estimated_time' => EstimasiProduk::where('produk_id', $product->id)
                 ->first()?->calculateTotalProductionTime($quantity) ?? 0
         ];
@@ -153,35 +154,5 @@ class PosController extends Controller
 
         return redirect()->route('pos.cart', ['tenant' => $tenant])
             ->with('success', 'Cart cleared successfully');
-    }
-
-    public function invoice(Transaksi $transaksi)
-    {
-        $transaksi->load([
-            'pelanggan',
-            'transaksiItem.produk',
-            'transaksiItem.bahan'
-        ]);
-
-        return view('pos.invoice', compact('transaksi'));
-    }
-
-    private function getCachedPrice($productId, $specifications, $quantity)
-    {
-        $cacheKey = "price_{$productId}_{$quantity}_" . md5(json_encode($specifications));
-
-        return cache()->remember($cacheKey, now()->addHours(24), function () use ($productId, $specifications, $quantity) {
-            $product = Produk::findOrFail($productId);
-            $totalPrice = $product->harga_dasar;
-
-            foreach ($specifications as $specId => $value) {
-                $spesifikasiProduk = SpesifikasiProduk::with(['spesifikasi', 'bahans'])->find($specId);
-                if ($spesifikasiProduk && $spesifikasiProduk->validateSpecificationValue($value)) {
-                    $totalPrice += $spesifikasiProduk->calculatePrice($value, $value, $quantity);
-                }
-            }
-
-            return $totalPrice;
-        });
     }
 }

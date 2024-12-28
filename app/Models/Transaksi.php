@@ -2,14 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\DB;
 use App\Events\OrderProgressUpdated;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Notifications\Notification;
+use App\Notifications\OrderStatusChanged;
 use Filament\Notifications\Actions\Action;
 
 class Transaksi extends BaseModel
 {
     protected $table = 'transaksis';
+
+    // Add eager loading by default
+    protected $with = ['pelanggan', 'transaksiItem.produk', 'vendor'];
 
     protected $fillable = [
         'vendor_id',
@@ -22,7 +28,6 @@ class Transaksi extends BaseModel
         'estimasi_selesai',
         'tanggal_dibuat',
         'progress_percentage',
-        'current_stage'
     ];
 
     protected $casts = [
@@ -52,50 +57,41 @@ class Transaksi extends BaseModel
 
     protected static function booted()
     {
-        static::created(function ($transaksiItem) {
-            $bahan = Bahan::find($transaksiItem->bahan_id);
-            if ($bahan) {
-                $bahan->decrement('stok', $transaksiItem->kuantitas);
+        static::creating(function ($transaksi) {
+            // Verify pelanggan exists before creating transaction
+            if (!Pelanggan::find($transaksi->pelanggan_id)) {
+                throw new \Exception('Customer not found');
             }
         });
 
-        static::updated(function ($transaksi) {
-            if ($transaksi->isDirty('status')) {
-                Notification::make()
-                    ->title('Order Status Updated')
-                    ->body("Order #{$transaksi->kode} is now {$transaksi->status}")
-                    ->icon('heroicon-o-shopping-bag')
-                    ->actions([
-                        Action::make('view')
-                            ->button()
-                            ->url(route('pos.invoice', [
-                                'tenant' => $transaksi->vendor->slug,
-                                'transaksi' => $transaksi->id
-                            ]))
-                    ])
-                    ->sendToDatabase($transaksi->pelanggan->user);
+        static::created(function ($transaksi) {
+            // Load relationships before notification
+            $transaksi->load(['pelanggan', 'transaksiItem.produk', 'vendor']);
+            if ($transaksi->pelanggan) {
+                $transaksi->pelanggan->notify(new OrderStatusChanged($transaksi));
             }
         });
     }
 
-    public function updateProgress($stage, $percentage)
+    public function updateOrderStatus($status)
     {
-        $this->update([
-            'current_stage' => $stage,
-            'progress_percentage' => $percentage
-        ]);
-
-        // Trigger notification
-        event(new OrderProgressUpdated($this));
-    }
-
-    public function getProgressStages()
-    {
-        return [
-            'pending' => 'Order Received',
-            'processing' => 'In Production',
-            'quality_check' => 'Quality Check',
-            'completed' => 'Ready for Pickup'
+        $progressMap = [
+            'pending' => 0,
+            'processing' => 25,
+            'quality_check' => 80,
+            'completed' => 100,
+            'cancelled' => 0
         ];
+
+        DB::transaction(function () use ($status, $progressMap) {
+            $this->forceFill([
+                'status' => $status,
+                'progress_percentage' => $progressMap[$status]
+            ])->save();
+
+            $this->refresh();
+            sleep(1);
+            $this->pelanggan->notify(new OrderStatusChanged($this));
+        });
     }
 }

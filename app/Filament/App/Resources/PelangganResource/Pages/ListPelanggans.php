@@ -13,7 +13,13 @@ class ListPelanggans extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->label('Tambah Pelanggan')->icon('heroicon-o-plus'),
+            Actions\CreateAction::make()
+                ->label('Tambah Pelanggan')
+                ->icon('heroicon-o-plus')
+                ->color('primary')
+                ->tooltip('Klik untuk menambah pelanggan baru')
+                ->modalWidth('lg')
+                ->slideOver(),
         ];
     }
 }

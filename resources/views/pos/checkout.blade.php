@@ -1,6 +1,11 @@
 @extends('pos.index')
 
 @section('content')
+
+    @php
+        $vendor = \App\Models\Vendor::where('slug', request()->route('tenant'))->firstOrFail();
+    @endphp
+
     {{-- header --}}
     <div class="col-md-12 mt-4">
         <div class="card shadow-sm border-0 rounded-4">
@@ -23,26 +28,15 @@
 
     <div class="col-md-12 mt-4">
         <div class="card shadow-sm border-0 rounded-4">
-            <div class="card-header bg-white border-0 py-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h2 class="mb-0 fw-bold text-black">Checkout</h2>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Notification --}}
-            @if (session('success'))
-                <div class="col-md-12 mt-3">
-                    <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+            @if (session('error'))
+                <div class="alert alert-danger">
+                    {{ session('error') }}
                 </div>
             @endif
 
             <div class="card-body p-4">
-                <form action="{{ route('pos.checkout.process', ['tenant' => request()->route('tenant')]) }}" method="POST">
+                <form id="checkoutForm"
+                    action="{{ route('pos.checkout.process', ['tenant' => request()->route('tenant')]) }}" method="POST">
                     @csrf
                     <div class="row">
                         <div class="col-md-6">
@@ -75,16 +69,59 @@
 
                         <div class="col-md-6">
                             <h4 class="mb-4">Order Summary</h4>
-                            @foreach ($cartItems as $item)
+                            @foreach ($cartItems as $index => $item)
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>{{ $item['product_name'] }} (x{{ $item['quantity'] }})</span>
-                                    <span>Rp {{ number_format($item['total_price'], 0, ',', '.') }}</span>
+                                    <span>Rp
+                                        {{ number_format(
+                                            $item['base_price'] * $item['quantity'] +
+                                                collect($item['specifications'])->sum(function ($spec) use ($item) {
+                                                    return $spec['harga_per_satuan'] * $item['quantity'];
+                                                }),
+                                            0,
+                                            ',',
+                                            '.',
+                                        ) }}</span>
                                 </div>
+
+                                <!-- Hidden inputs but keep visible summary -->
+                                <input type="hidden" name="items[{{ $index }}][product_id]"
+                                    value="{{ $item['product_id'] }}">
+                                <input type="hidden" name="items[{{ $index }}][quantity]"
+                                    value="{{ $item['quantity'] }}">
+                                <input type="hidden" name="items[{{ $index }}][base_price]"
+                                    value="{{ $item['base_price'] }}">
+                                <input type="hidden" name="items[{{ $index }}][product_name]"
+                                    value="{{ $item['product_name'] }}">
+
+                                @foreach ($item['specifications'] as $specId => $spec)
+                                    <input type="hidden"
+                                        name="items[{{ $index }}][specifications][{{ $specId }}][bahan_id]"
+                                        value="{{ $spec['bahan_id'] ?? '' }}">
+                                    <input type="hidden"
+                                        name="items[{{ $index }}][specifications][{{ $specId }}][value]"
+                                        value="{{ $spec['value'] }}">
+                                    <input type="hidden"
+                                        name="items[{{ $index }}][specifications][{{ $specId }}][harga_per_satuan]"
+                                        value="{{ $spec['harga_per_satuan'] }}">
+                                @endforeach
                             @endforeach
                             <hr>
                             <div class="d-flex justify-content-between mb-4">
                                 <strong>Total</strong>
-                                <strong>Rp {{ number_format($totalAmount, 0, ',', '.') }}</strong>
+                                <strong>Rp
+                                    {{ number_format(
+                                        collect($cartItems)->sum(function ($item) {
+                                            $baseTotal = $item['base_price'] * $item['quantity'];
+                                            $specTotal = collect($item['specifications'])->sum(function ($spec) use ($item) {
+                                                return $spec['harga_per_satuan'] * $item['quantity'];
+                                            });
+                                            return $baseTotal + $specTotal;
+                                        }),
+                                        0,
+                                        ',',
+                                        '.',
+                                    ) }}</strong>
                             </div>
                         </div>
                     </div>
@@ -191,5 +228,32 @@
                 })
                 .catch(error => console.error('Error:', error));
         }
+
+        document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    window.open(data.invoiceUrl, '_blank');
+                    window.location.href = data.redirectUrl;
+                } else {
+                    throw new Error(data.message || 'Checkout failed');
+                }
+            } catch (error) {
+                alert(error.message);
+            }
+        });
     </script>
 @endsection

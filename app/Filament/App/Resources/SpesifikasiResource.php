@@ -33,6 +33,8 @@ class SpesifikasiResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Informasi Spesifikasi')
                     ->description('Masukkan informasi spesifikasi produk')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->collapsible()
                     ->schema([
                         Forms\Components\Group::make()
                             ->schema([
@@ -40,22 +42,46 @@ class SpesifikasiResource extends Resource
                                     ->required()
                                     ->maxLength(255)
                                     ->label('Nama Spesifikasi')
-                                    ->helperText('Masukkan nama spesifikasi produk'),
+                                    ->placeholder('Contoh: Berat, Panjang, Warna')
+                                    ->helperText('Masukkan nama spesifikasi produk')
+                                    ->autocomplete('off'),
                                 Forms\Components\Select::make('tipe_input')
                                     ->required()
+                                    ->searchable()
                                     ->options([
                                         'text' => 'Text',
                                         'number' => 'Number',
                                         'select' => 'Select',
-                                        // 'checkbox' => 'Checkbox',
                                     ])
                                     ->label('Tipe Input')
-                                    ->helperText('Pilih tipe input untuk spesifikasi ini'),
-                                Forms\Components\TextInput::make('satuan')
+                                    ->helperText('Pilih tipe input untuk spesifikasi ini')
+                                    ->native(false),
+                                Forms\Components\Select::make('satuan')
                                     ->required()
-                                    ->maxLength(255)
+                                    ->searchable()
+                                    ->options([
+                                        'kg' => 'Kilogram (kg)',
+                                        'g' => 'Gram (g)',
+                                        'mg' => 'Miligram (mg)',
+                                        'l' => 'Liter (l)',
+                                        'ml' => 'Mililiter (ml)',
+                                        'cm' => 'Centimeter (cm)',
+                                        'm' => 'Meter (m)',
+                                        'mm' => 'Milimeter (mm)',
+                                        'pcs' => 'Pieces (pcs)',
+                                        'unit' => 'Unit',
+                                        'pack' => 'Pack',
+                                        'box' => 'Box',
+                                        'lusin' => 'Lusin',
+                                        'kodi' => 'Kodi',
+                                        'rim' => 'Rim',
+                                        'roll' => 'Roll',
+                                        'lembar' => 'Lembar',
+                                        'buah' => 'Buah'
+                                    ])
                                     ->label('Satuan')
-                                    ->helperText('Masukkan satuan untuk spesifikasi ini'),
+                                    ->helperText('Pilih satuan untuk spesifikasi ini')
+                                    ->native(false),
                             ])->columns(2)
                     ])
             ]);
@@ -69,32 +95,87 @@ class SpesifikasiResource extends Resource
                     ->label('Nama Spesifikasi')
                     ->description(fn(Spesifikasi $record): string => "Tipe: {$record->tipe_input}")
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->copyable()
+                    ->tooltip('Klik untuk menyalin')
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('satuan')
                     ->label('Satuan')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->badge()
+                    ->color('success'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat Pada')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->since(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Diperbarui Pada')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
-            ])
+                    ->since()
+            ])->defaultSort('created_at', 'desc')
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('satuan')
+                    ->options([
+                        'kg' => 'Kilogram (kg)',
+                        'g' => 'Gram (g)',
+                        'mg' => 'Miligram (mg)',
+                        'l' => 'Liter (l)',
+                        'ml' => 'Mililiter (ml)',
+                        'cm' => 'Centimeter (cm)',
+                        'm' => 'Meter (m)',
+                        'mm' => 'Milimeter (mm)',
+                        'pcs' => 'Pieces (pcs)',
+                        'unit' => 'Unit',
+                        'pack' => 'Pack',
+                        'box' => 'Box',
+                        'lusin' => 'Lusin',
+                        'kodi' => 'Kodi',
+                        'rim' => 'Rim',
+                        'roll' => 'Roll',
+                        'lembar' => 'Lembar',
+                        'buah' => 'Buah'
+                    ])
+                    ->label('Filter Satuan')
+                    ->searchable()
+                    ->preload()
+                    ->native(false),
+                Tables\Filters\SelectFilter::make('tipe_input')
+                    ->options([
+                        'text' => 'Text',
+                        'number' => 'Number',
+                        'select' => 'Select'
+                    ])
+                    ->label('Filter Tipe Input')
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->tooltip('Edit data')
+                    ->icon('heroicon-m-pencil-square'),
+                    Tables\Actions\ViewAction::make()
+                    ->tooltip('Lihat data')
+                    ->icon('heroicon-m-eye'),
+                    Tables\Actions\DeleteAction::make()
+                    ->tooltip('Hapus data')
+                    ->icon('heroicon-m-trash')
+                    ->modal()
+                    ->modalIcon('heroicon-m-trash')
+                    ->modalDescription('Are you sure you want to delete this item? This action cannot be undone.'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->icon('heroicon-m-trash')
+                        ->modalIcon('heroicon-m-trash')
+                        ->modalDescription('Are you sure you want to delete these items? This action cannot be undone.'),
+                ])->icon('heroicon-m-cog-6-tooth'),
             ]);
     }
 

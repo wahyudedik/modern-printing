@@ -8,28 +8,17 @@ use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
 {
-    public function show(Transaksi $transaksi)
+    public function download(Request $request, $tenant, Transaksi $transaksi)
     {
-        $transaksi->load([
-            'pelanggan',
-            'transaksiItem.produk',
-            'transaksiItem.bahan',
-            'vendor'
-        ]);
+        // Ensure transaction exists and load relationships
+        $transaksi = Transaksi::with(['transaksiItem.produk', 'pelanggan', 'vendor'])
+            ->findOrFail($transaksi->id);
 
-        return view('pos.invoice', compact('transaksi'));
-    }
+        if (!$transaksi->pelanggan) {
+            abort(404, 'Customer not found for this transaction');
+        }
 
-    public function print(Transaksi $transaksi)
-    {
-        $transaksi->load([
-            'pelanggan',
-            'transaksiItem.produk',
-            'transaksiItem.bahan',
-            'vendor'
-        ]);
-
-        $pdf = app('dompdf.wrapper')->loadView('pos.print-invoice', compact('transaksi'));
-        return $pdf->stream('Invoice-' . $transaksi->kode . '.pdf');
+        $pdf = app(PDF::class)->loadView('pos.print-invoice', compact('transaksi'));
+        return $pdf->download("invoice-{$transaksi->kode}.pdf");
     }
 }

@@ -8,7 +8,9 @@ use Illuminate\Support\Carbon;
 
 class DashboardTransaksiChart extends ChartWidget
 {
-    protected static ?string $heading = 'Transactions Overview';
+    protected static ?string $heading = 'Ringkasan Transaksi';
+
+    protected static ?string $pollingInterval = '15s';
 
     protected static ?int $sort = 2;
 
@@ -19,10 +21,19 @@ class DashboardTransaksiChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Daily Transactions',
+                    'label' => 'Transaksi Harian',
                     'data' => $data['transactions'],
-                    'backgroundColor' => '#36A2EB',
+                    'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
                     'borderColor' => '#36A2EB',
+                    'borderWidth' => 2,
+                    'tension' => 0.4,
+                    'fill' => true,
+                    'pointBackgroundColor' => '#36A2EB',
+                    'pointBorderColor' => '#fff',
+                    'pointHoverBackgroundColor' => '#fff',
+                    'pointHoverBorderColor' => '#36A2EB',
+                    'pointRadius' => 4,
+                    'pointHoverRadius' => 6,
                 ],
             ],
             'labels' => $data['labels'],
@@ -36,7 +47,7 @@ class DashboardTransaksiChart extends ChartWidget
 
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
-            $days->push($date->format('D'));
+            $days->push($date->format('D, d M'));
 
             $transactions->push(
                 Transaksi::whereDate('created_at', $date)->count()
@@ -52,5 +63,42 @@ class DashboardTransaksiChart extends ChartWidget
     protected function getType(): string
     {
         return 'line';
+    }
+
+    protected function getOptions(): array
+    {
+        return [
+            'plugins' => [
+                'legend' => [
+                    'display' => true,
+                    'position' => 'top',
+                    'labels' => [
+                        'usePointStyle' => true,
+                        'padding' => 20,
+                    ],
+                ],
+            ],
+            'scales' => [
+                'y' => [
+                    'beginAtZero' => true,
+                    'grid' => [
+                        'display' => true,
+                        'drawBorder' => false,
+                    ],
+                ],
+                'x' => [
+                    'grid' => [
+                        'display' => false,
+                    ],
+                ],
+            ],
+            'elements' => [
+                'line' => [
+                    'borderJoinStyle' => 'round',
+                ],
+            ],
+            'responsive' => true,
+            'maintainAspectRatio' => false,
+        ];
     }
 }

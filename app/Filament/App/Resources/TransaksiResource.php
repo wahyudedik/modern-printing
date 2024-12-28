@@ -53,6 +53,8 @@ class TransaksiResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Informasi Transaksi')
                     ->description('Masukkan informasi transaksi dengan benar')
+                    ->icon('heroicon-o-document-text')
+                    ->collapsible()
                     ->schema([
                         Forms\Components\Group::make()
                             ->schema([
@@ -61,38 +63,60 @@ class TransaksiResource extends Resource
                                     ->required()
                                     ->unique(ignoreRecord: true)
                                     ->readOnly()
-                                    ->default('TRX-' . strtoupper(uniqid())),
+                                    ->default('TRX-' . strtoupper(uniqid()))
+                                    ->prefixIcon('heroicon-o-hashtag'),
                                 Forms\Components\Select::make('user_id')
                                     ->label('User')
                                     ->relationship('user', 'name')
                                     ->required()
                                     ->searchable()
-                                    ->preload(),
+                                    ->preload()
+                                    ->prefixIcon('heroicon-o-user'),
                                 Forms\Components\Select::make('pelanggan_id')
                                     ->label('Pelanggan')
                                     ->relationship('pelanggan', 'nama')
                                     ->required()
                                     ->searchable()
-                                    ->preload(),
+                                    ->preload()
+                                    ->prefixIcon('heroicon-o-users'),
                             ])->columns(2),
                     ])->columnSpan(['lg' => 2]),
                 Forms\Components\Section::make('Pembayaran')
                     ->description('Informasi pembayaran')
+                    ->icon('heroicon-o-credit-card')
+                    ->collapsible()
                     ->schema([
                         Forms\Components\Select::make('status')
                             ->label('Status')
                             ->options([
                                 'pending' => 'Pending',
+                                'processing' => 'Processing',
+                                'quality_check' => 'Quality Check',
                                 'completed' => 'Completed',
-                                'cancelled' => 'Cancelled',
+                                'cancelled' => 'Cancelled'
                             ])
+                            ->live()
+                            ->afterStateUpdated(function ($state, $record, $set) {
+                                $progressMap = [
+                                    'pending' => 0,
+                                    'processing' => 25,
+                                    'quality_check' => 80,
+                                    'completed' => 100,
+                                    'cancelled' => 0
+                                ];
+                                $set('progress_percentage', $progressMap[$state]);
+                                $record->updateOrderStatus($state);
+                            })
                             ->default('pending')
-                            ->required(),
+                            ->required()
+                            ->prefixIcon('heroicon-o-flag')
+                            ->native(false),
                         Forms\Components\TextInput::make('total_harga')
                             ->label('Total Harga')
                             ->numeric()
                             ->prefix('Rp')
-                            ->required(),
+                            ->required()
+                            ->prefixIcon('heroicon-o-currency-dollar'),
                         Forms\Components\Select::make('payment_method')
                             ->label('Metode Pembayaran')
                             ->options([
@@ -100,22 +124,35 @@ class TransaksiResource extends Resource
                                 'transfer' => 'Transfer Bank',
                                 'ewallet' => 'E-Wallet'
                             ])
-                            ->required(),
+                            ->required()
+                            ->prefixIcon('heroicon-o-credit-card')
+                            ->native(false),
+                        Forms\Components\TextInput::make('progress_percentage')
+                            ->label('Progress (%)')
+                            ->numeric()
+                            ->readOnly()
+                            ->default(0)
+                            ->required()
+                            ->prefixIcon('heroicon-o-chart-bar')
+                            ->suffix('%'),
                     ])->columnSpan(['lg' => 1]),
                 Forms\Components\Section::make('Informasi Tambahan')
                     ->description('Informasi estimasi dan tanggal')
+                    ->icon('heroicon-o-clock')
+                    ->collapsible()
                     ->schema([
-                        Forms\Components\TextInput::make('estimasi_selesai')
+                        Forms\Components\DateTimePicker::make('estimasi_selesai')
                             ->label('Estimasi Selesai')
-                            ->required(),
+                            ->required()
+                            ->prefixIcon('heroicon-o-calendar'),
                         Forms\Components\DatePicker::make('tanggal_dibuat')
                             ->label('Tanggal Dibuat')
                             ->required()
-                            ->default(now()),
+                            ->default(now())
+                            ->prefixIcon('heroicon-o-calendar'),
                     ])->columnSpan(['lg' => 1])
             ]);
     }
-
     public static function table(Table $table): Table
     {
         return $table
@@ -125,34 +162,11 @@ class TransaksiResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->copyable()
-                    ->copyMessage('Kode transaksi berhasil disalin')
-                    ->copyMessageDuration(1500)
                     ->description(fn(Transaksi $record): string => "Created by: {$record->user?->name}")
-                    ->icon('heroicon-o-document-text'),
-                Tables\Columns\TextColumn::make('user.name')
-                    ->label('User')
-                    ->searchable()
-                    ->sortable()
-                    ->icon('heroicon-o-user')
-                    ->description(fn(Transaksi $record): string => $record->user?->email ?? '-'),
-                Tables\Columns\TextColumn::make('pelanggan.nama')
-                    ->label('Pelanggan')
-                    ->searchable()
-                    ->sortable()
-                    ->icon('heroicon-o-users')
-                    ->description(fn(Transaksi $record): string => "Customer ID: {$record->pelanggan_id}"),
-                Tables\Columns\TextColumn::make('vendor.name')
-                    ->label('Vendor')
-                    ->searchable()
-                    ->sortable()
-                    ->icon('heroicon-o-building-storefront')
-                    ->description(fn(Transaksi $record): string => "Vendor ID: {$record->vendor_id}"),
-                Tables\Columns\TextColumn::make('total_harga')
-                    ->label('Total Harga')
-                    ->money('IDR')
-                    ->sortable()
-                    ->icon('heroicon-o-currency-dollar')
-                    ->description(fn(Transaksi $record): string => "Payment: {$record->payment_method}"),
+                    ->icon('heroicon-o-document-text')
+                    ->tooltip('Click to copy transaction code')
+                    ->size('sm'),
+
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->colors([
@@ -162,14 +176,64 @@ class TransaksiResource extends Resource
                     ])
                     ->icon('heroicon-o-check-circle')
                     ->description(fn(Transaksi $record): string => "Est. completion: {$record->estimasi_selesai}")
-                    ->sortable(),
+                    ->size('sm'),
+
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('User')
+                    ->searchable()
+                    ->sortable()
+                    ->icon('heroicon-o-user')
+                    ->description(fn(Transaksi $record): string => $record->user?->email ?? '-')
+                    ->tooltip('User details')
+                    ->size('sm'),
+
+                Tables\Columns\TextColumn::make('pelanggan.nama')
+                    ->label('Pelanggan')
+                    ->searchable()
+                    ->sortable()
+                    ->icon('heroicon-o-users')
+                    ->description(fn(Transaksi $record): string => "Customer ID: {$record->pelanggan_id}")
+                    ->tooltip('Customer details')
+                    ->size('sm'),
+
+                Tables\Columns\TextColumn::make('vendor.name')
+                    ->label('Vendor')
+                    ->searchable()
+                    ->sortable()
+                    ->icon('heroicon-o-building-storefront')
+                    ->description(fn(Transaksi $record): string => "Vendor ID: {$record->vendor_id}")
+                    ->tooltip('Vendor details')
+                    ->size('sm'),
+
+                Tables\Columns\TextColumn::make('total_harga')
+                    ->label('Total Harga')
+                    ->money('IDR')
+                    ->sortable()
+                    ->icon('heroicon-o-currency-dollar')
+                    ->description(fn(Transaksi $record): string => "Payment: {$record->payment_method}")
+                    ->tooltip('Total amount')
+                    ->size('sm'),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->colors([
+                        'danger' => 'cancelled',
+                        'warning' => 'pending',
+                        'success' => 'completed'
+                    ])
+                    ->icon('heroicon-o-check-circle')
+                    ->description(fn(Transaksi $record): string => "Est. completion: {$record->estimasi_selesai}")
+                    ->sortable()
+                    ->tooltip('Transaction status')
+                    ->size('sm'),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Tanggal Transaksi')
                     ->dateTime()
                     ->sortable()
                     ->icon('heroicon-o-calendar')
-                    ->description(fn(Transaksi $record): string => "Due date: {$record->tanggal_dibuat}")
-            ])
+                    ->size('sm')
+            ])->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
@@ -181,9 +245,9 @@ class TransaksiResource extends Resource
                 Tables\Filters\Filter::make('created_at')
                     ->form([
                         Forms\Components\DatePicker::make('created_from')
-                            ->label('Created From'),
+                            ->label('Dari Tanggal'),
                         Forms\Components\DatePicker::make('created_until')
-                            ->label('Created Until'),
+                            ->label('Sampai Tanggal'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
@@ -199,10 +263,24 @@ class TransaksiResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make(),
-                ])
+                    Tables\Actions\ViewAction::make()
+                        ->icon('heroicon-o-eye')
+                        ->tooltip('View Details')
+                        ->color('info')
+                        ->modalWidth('5xl'),
+                    Tables\Actions\EditAction::make()
+                        ->icon('heroicon-o-pencil')
+                        ->tooltip('Edit Transaction')
+                        ->color('warning')
+                        ->modalWidth('3xl'),
+                    Tables\Actions\DeleteAction::make()
+                        ->icon('heroicon-o-trash')
+                        ->tooltip('Delete Transaction')
+                        ->color('danger')
+                        ->modalAlignment('center'),
+                ])->tooltip('Actions')
+                    ->color('gray')
+                    ->icon('heroicon-m-ellipsis-horizontal')
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -216,14 +294,27 @@ class TransaksiResource extends Resource
                                 ->label('Status')
                                 ->options([
                                     'pending' => 'Pending',
-                                    'success' => 'Success',
-                                    'failed' => 'Failed',
+                                    'processing' => 'Processing',
+                                    'quality_check' => 'Quality Check',
+                                    'completed' => 'Completed',
+                                    'cancelled' => 'Cancelled'
                                 ])
                                 ->required()
+                                ->native(false)
                         ])
                         ->action(function (Collection $records, array $data) {
                             $records->each(function ($record) use ($data) {
-                                $record->update(['status' => $data['status']]);
+                                $record->update([
+                                    'status' => $data['status'],
+                                    'progress_percentage' => match ($data['status']) {
+                                        'pending' => 0,
+                                        'processing' => 25,
+                                        'quality_check' => 80,
+                                        'completed' => 100,
+                                        'cancelled' => 0
+                                    }
+                                ]);
+                                $record->updateOrderStatus($data['status']);
                             });
                         }),
                     Tables\Actions\BulkAction::make('export')
@@ -232,36 +323,47 @@ class TransaksiResource extends Resource
                         ->color('warning')
                         ->action(function (Collection $records) {
                             return response()->streamDownload(function () use ($records) {
-                                // Open output buffer
                                 $handle = fopen('php://output', 'w');
 
-                                // Add CSV headers
+                                // Headers
                                 fputcsv($handle, [
-                                    'ID',
+                                    'Kode Transaksi',
                                     'Vendor',
-                                    'Customer Data',
-                                    'Product Data',
-                                    'Minimum Qty',
-                                    'Total Qty',
+                                    'User',
+                                    'Customer',
                                     'Total Price',
-                                    'Payment Method',
                                     'Status',
-                                    'Created At'
+                                    'Payment Method',
+                                    'Progress',
+                                    'Estimated Completion',
+                                    'Created Date',
+                                    'Items'
                                 ]);
 
-                                // Add data rows
+                                // Data rows
                                 foreach ($records as $record) {
+                                    $items = $record->transaksiItem->map(function ($item) {
+                                        return [
+                                            'product' => $item->produk->nama_produk ?? '-',
+                                            'material' => $item->bahan->nama_bahan ?? '-',
+                                            'quantity' => $item->kuantitas,
+                                            'price' => $item->harga_satuan,
+                                            'specs' => $item->spesifikasi
+                                        ];
+                                    })->toJson();
+
                                     fputcsv($handle, [
-                                        $record->id,
+                                        $record->kode,
                                         $record->vendor->name,
-                                        json_encode($record->pelanggan),
-                                        json_encode($record->produk),
-                                        $record->minimal_qty,
-                                        $record->total_qty,
+                                        $record->user->name,
+                                        $record->pelanggan->nama,
                                         $record->total_harga,
-                                        $record->metode_pembayaran,
                                         $record->status,
-                                        $record->created_at
+                                        $record->payment_method,
+                                        $record->progress_percentage . '%',
+                                        $record->estimasi_selesai,
+                                        $record->tanggal_dibuat,
+                                        $items
                                     ]);
                                 }
 

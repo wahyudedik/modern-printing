@@ -54,7 +54,8 @@
                             <div class="d-flex justify-content-between border-bottom py-2">
                                 <span class="text-muted">Harga Dasar</span>
                                 <span class="fw-medium">
-                                    Rp {{ number_format($item['base_price'], 0, ',', '.') }}
+                                    {{ $item['quantity'] }} × Rp {{ number_format($item['base_price'], 0, ',', '.') }} =
+                                    Rp {{ number_format($item['base_price'] * $item['quantity'], 0, ',', '.') }}
                                 </span>
                             </div>
 
@@ -65,23 +66,17 @@
                                         'spesifikasi',
                                         'bahans',
                                     ])->find($specId);
-                                    $bahan = $spec['bahan_id'] ? \App\Models\Bahan::find($spec['bahan_id']) : null;
+                                    $bahan = \App\Models\Bahan::find($spec['bahan_id']);
                                     $hargaPerSatuan = $bahan ? $bahan->harga_per_satuan : 0;
-                                    $specPrice = $spesifikasiProduk->calculatePrice(
-                                        $spec['value'],
-                                        $spec['bahan_id'],
-                                        $item['quantity'],
-                                    );
                                 @endphp
                                 <div class="d-flex justify-content-between border-bottom py-2">
                                     <span class="text-muted">
                                         {{ $spesifikasiProduk->spesifikasi->nama_spesifikasi }}
                                     </span>
                                     <span class="fw-medium">
-                                        {{ $spec['value'] }} {{ $spesifikasiProduk->spesifikasi->satuan }}
-                                        @if ($bahan)
-                                            (Rp {{ number_format($specPrice, 0, ',', '.') }})
-                                        @endif
+                                        {{ $bahan->nama_bahan }}: {{ $item['quantity'] }} × Rp
+                                        {{ number_format($hargaPerSatuan) }} =
+                                        Rp {{ number_format($item['quantity'] * $hargaPerSatuan) }}
                                     </span>
                                 </div>
                             @endforeach
@@ -105,7 +100,16 @@
                             <div class="d-flex justify-content-between pt-3">
                                 <span class="fw-bold">Total Item</span>
                                 <span class="fw-bold text-primary">
-                                    Rp {{ number_format($item['total_price'], 0, ',', '.') }}
+                                    Rp
+                                    {{ number_format(
+                                        $item['base_price'] * $item['quantity'] +
+                                            collect($item['specifications'])->sum(function ($spec) use ($item) {
+                                                return $spec['harga_per_satuan'] * $item['quantity'];
+                                            }),
+                                        0,
+                                        ',',
+                                        '.',
+                                    ) }}
                                 </span>
                             </div>
                         </div>
@@ -122,24 +126,15 @@
                     Rp
                     {{ number_format(
                         collect($cartItems)->sum(function ($item) {
-                            $itemTotal = $item['base_price'];
+                            $baseTotal = $item['base_price'] * $item['quantity'];
+                            $specTotal = 0;
+                    
                             foreach ($item['specifications'] as $specId => $spec) {
-                                $spesifikasiProduk = \App\Models\SpesifikasiProduk::with(['spesifikasi', 'bahans'])->find($specId);
-                    
                                 $hargaPerSatuan = $spec['harga_per_satuan'] ?? 0;
-                                $quantity = $item['quantity'] ?? 1;
-                    
-                                if ($spesifikasiProduk->spesifikasi->nama_spesifikasi === 'Jumlah Halaman') {
-                                    $specPrice = $spec['value'] * $hargaPerSatuan; // Price per page
-                                } elseif ($spesifikasiProduk->spesifikasi->nama_spesifikasi === 'Cover') {
-                                    $specPrice = $hargaPerSatuan; // Fixed cover price
-                                } else {
-                                    $specPrice = $spec['value'] * $hargaPerSatuan;
-                                }
-                    
-                                $itemTotal += $specPrice;
+                                $specTotal += $hargaPerSatuan * $item['quantity'];
                             }
-                            return $itemTotal * $quantity;
+                    
+                            return $baseTotal + $specTotal;
                         }),
                         0,
                         ',',
@@ -147,17 +142,18 @@
                     ) }}
                 </h4>
             </div>
-
-            <!-- Action Buttons -->
-            <div class="mt-4 d-flex justify-content-end gap-2">
-                <button class="btn btn-light rounded-pill px-4" onclick="clearCart()">
-                    <i class="fas fa-trash me-2"></i>Clear Cart
-                </button>
-                <button class="btn btn-primary rounded-pill px-4" onclick="proceedToCheckout()">
-                    <i class="fas fa-shopping-cart me-2"></i>Proceed to Checkout
-                </button>
-            </div>
         </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-4 d-flex justify-content-end gap-2">
+            <button class="btn btn-light rounded-pill px-4" onclick="clearCart()">
+                <i class="fas fa-trash me-2"></i>Clear Cart
+            </button>
+            <button class="btn btn-primary rounded-pill px-4" onclick="proceedToCheckout()">
+                <i class="fas fa-shopping-cart me-2"></i>Proceed to Checkout
+            </button>
+        </div>
+    </div>
     </div>
 
     {{-- footer --}}

@@ -18,12 +18,11 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('pelanggan_id')->constrained('pelanggans')->cascadeOnDelete();
             $table->decimal('total_harga', 10, 2);
-            $table->enum('status', ['pending', 'completed', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'completed', 'cancelled', 'quality_check', 'processing'])->default('pending');
             $table->string('payment_method');
             $table->string('estimasi_selesai');
             $table->date('tanggal_dibuat');
             $table->integer('progress_percentage')->default(0);
-            $table->string('current_stage')->nullable();
             $table->timestamps();
         });
 
