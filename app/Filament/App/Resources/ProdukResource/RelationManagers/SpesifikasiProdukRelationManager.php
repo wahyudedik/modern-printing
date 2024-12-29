@@ -33,7 +33,7 @@ class SpesifikasiProdukRelationManager extends RelationManager
                     ->schema([
                         Forms\Components\Group::make()
                             ->schema([
-                                Forms\Components\hidden::make('vendor_id')
+                                Forms\Components\Hidden::make('vendor_id')
                                     ->default(Filament::getTenant()->id),
                                 Select::make('spesifikasi_id')
                                     ->relationship('spesifikasi', 'nama_spesifikasi')
