@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('kategori_produks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
-            $table->string('nama_kategori');
+            $table->string('nama_kategori'); 
             $table->string('slug');
             $table->timestamps();
         });

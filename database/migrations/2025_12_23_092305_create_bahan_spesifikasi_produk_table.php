@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('bahan_spesifikasi_produk', function (Blueprint $table) {
             $table->id();
+            // $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
             $table->foreignId('bahan_id')->constrained('bahans')->cascadeOnDelete();
             $table->foreignId('spesifikasi_produk_id')->constrained('spesifikasi_produks')->cascadeOnDelete();
-            $table->timestamps();
+            $table->timestamps(); 
 
             // Ensure unique combination of bahan and spesifikasi_produk
             $table->unique(['bahan_id', 'spesifikasi_produk_id'], 'bahan_spek_unique');

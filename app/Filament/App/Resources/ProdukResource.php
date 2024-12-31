@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\ProdukResource\Pages;
 use App\Filament\App\Resources\ProdukResource\RelationManagers;
 use App\Filament\App\Resources\BahanResource\RelationManagers\WholesalePriceRelationManager;
+use App\Filament\App\Resources\ProdukResource\RelationManagers\EstimasiProdukRelationManager;
 use App\Filament\App\Resources\ProdukResource\RelationManagers\SpesifikasiProdukRelationManager;
 
 class ProdukResource extends Resource
@@ -66,12 +67,12 @@ class ProdukResource extends Resource
                                     ->maxFiles(5)
                                     ->required()
                                     ->columnSpanFull()
-                                    ->imageEditorViewportWidth(3)
-                                    ->imageEditorViewportHeight(3)
+                                    ->imageEditorViewportWidth(1)
+                                    ->imageEditorViewportHeight(1)
                                     ->downloadable()
                                     ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                                    ->helperText('Format yang didukung: JPG, PNG, WEBP. Maksimal 5 gambar.')
-                                    ->panelAspectRatio('16:9'),
+                                    ->helperText('Format yang didukung: JPG, PNG, WEBP. Maksimal 5 gambar. Gambar pertama akan menjadi poster pos.')
+                                    ->panelLayout('grid'),
                             ]),
                         Forms\Components\Section::make('Informasi Produk')
                             ->description('Masukkan informasi detail produk')
@@ -127,12 +128,6 @@ class ProdukResource extends Resource
                                             ->helperText('Slug akan terisi otomatis'),
                                     ])
                                     ->required(),
-                                Forms\Components\TextInput::make('harga_dasar')
-                                    ->required()
-                                    ->numeric()
-                                    ->prefix('Rp')
-                                    ->placeholder('0')
-                                    ->live(onBlur: true),
                             ]),
                     ])->columnSpanFull(),
                 Forms\Components\Group::make()
@@ -344,7 +339,7 @@ class ProdukResource extends Resource
     {
         return [
             SpesifikasiProdukRelationManager::class,
-            // WholesalePriceRelationManager::class,
+            EstimasiProdukRelationManager::class,
         ];
     }
 

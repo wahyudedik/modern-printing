@@ -58,8 +58,8 @@ class BahanResource extends Resource
 
                         Forms\Components\Group::make()
                             ->schema([
-                                Forms\Components\TextInput::make('harga_per_satuan')
-                                    ->label('Harga per Satuan')
+                                Forms\Components\TextInput::make('hpp')
+                                    ->label('HPP')
                                     ->numeric()
                                     ->prefix('Rp')
                                     ->required()
@@ -126,8 +126,15 @@ class BahanResource extends Resource
                     ->searchable(isIndividual: true)
                     ->tooltip(fn($record) => "Nama Bahan: {$record->nama_bahan}")
                     ->wrap(),
-                Tables\Columns\TextColumn::make('harga_per_satuan')
+                Tables\Columns\TextColumn::make('hpp')
                     ->label('Harga per Satuan')
+                    ->formatStateUsing(fn($record) => $record->wholesalePrice->first()?->harga ?
+                        'Rp ' . number_format($record->wholesalePrice->first()->harga, 0, ',', '.') : '-')
+                    ->description(function ($record) {
+                        return $record->wholesalePrice->map(function ($price) {
+                            return "Qty {$price->min_quantity}-{$price->max_quantity}: Rp " . number_format($price->harga, 0, ',', '.');
+                        })->join("\n");
+                    })
                     ->money('IDR', true)
                     ->sortable()
                     ->alignment('center')

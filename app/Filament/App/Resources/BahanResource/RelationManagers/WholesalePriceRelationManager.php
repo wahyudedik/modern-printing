@@ -21,8 +21,8 @@ class WholesalePriceRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Wholesale Price Details')
-                    ->description('Set up wholesale pricing details for this material')
+                Forms\Components\Section::make('Harga Grosir Details')
+                    ->description('Atur detail harga grosir untuk bahan ini.')
                     ->icon('heroicon-o-currency-dollar')
                     ->collapsible()
                     ->schema([
@@ -56,18 +56,6 @@ class WholesalePriceRelationManager extends RelationManager
                                     ->step(0.01)
                                     ->hint('Enter the wholesale price per unit')
                                     ->suffixIcon('heroicon-m-banknotes'),
-                                Forms\Components\Select::make('produk_id')
-                                    ->label('Product')
-                                    ->required()
-                                    ->relationship('produk', 'nama_produk')
-                                    ->searchable()
-                                    ->preload()
-                                    ->createOptionForm([
-                                        Forms\Components\TextInput::make('nama_produk')
-                                            ->required()
-                                            ->maxLength(255),
-                                    ])
-                                    ->suffixIcon('heroicon-m-shopping-bag'),
                             ])->columns(1),
                     ])
             ]);
@@ -102,12 +90,6 @@ class WholesalePriceRelationManager extends RelationManager
                     ->label('Material')
                     ->description(fn($record): string => "Material: {$record->bahan->nama_bahan}")
                     ->icon('heroicon-m-beaker')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('produk.nama_produk')
-                    ->label('Produk')
-                    ->description(fn($record): string => "Product: {$record->produk->nama_produk}")
-                    ->icon('heroicon-m-shopping-bag')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')

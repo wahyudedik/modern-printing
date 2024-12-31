@@ -15,13 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
             $table->string('nama_alat');
-            $table->string('merk')->nullable();
+            $table->string('merek')->nullable();
             $table->string('model')->nullable();
-            $table->text('spesifikasi');
+            $table->text('spesifikasi_alat')->nullable();
             $table->enum('status', ['aktif', 'maintenance', 'rusak']);
             $table->date('tanggal_pembelian');
-            $table->integer('kapasitas_cetak_per_jam');
-            $table->string('tersedia')->nullable();
+            $table->integer('kapasitas_cetak_per_jam'); 
+            $table->string('tersedia')->nullable(); 
             $table->timestamps();
         });
     }

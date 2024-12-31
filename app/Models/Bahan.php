@@ -13,13 +13,13 @@ class Bahan extends BaseModel
     protected $fillable = [
         'vendor_id',
         'nama_bahan',
-        'harga_per_satuan',
+        'hpp',
         'satuan',
         'stok'
     ];
 
     protected $casts = [
-        'harga_per_satuan' => 'decimal:2',
+        'hpp' => 'decimal:2',
         'stok' => 'string'
     ];
     public function vendor()
@@ -39,7 +39,7 @@ class Bahan extends BaseModel
 
     public function spesifikasiProduk()
     {
-        return $this->belongsToMany(SpesifikasiProduk::class);
+        return $this->belongsToMany(SpesifikasiProduk::class, 'spesifikasi_produk_bahans', 'bahan_id', 'spesifikasi_produk_id');
     }
 
     public function checkStockLevel()

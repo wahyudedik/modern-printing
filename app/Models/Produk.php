@@ -14,7 +14,6 @@ class Produk extends BaseModel
         'nama_produk',
         'deskripsi',
         'kategori_id',
-        'harga_dasar',
     ];
 
     protected $casts = [
@@ -35,12 +34,7 @@ class Produk extends BaseModel
     {
         return $this->hasMany(SpesifikasiProduk::class, 'produk_id');
     }
-
-    public function wholesalePrice()
-    {
-        return $this->hasMany(WholesalePrice::class, 'produk_id');
-    }
-
+    
     public function estimasiProduk()
     {
         return $this->hasMany(EstimasiProduk::class, 'produk_id');

@@ -26,7 +26,6 @@ class TransaksiItemRelationManager extends RelationManager
                     ->schema([
                         Forms\Components\Hidden::make('vendor_id')
                             ->default(Filament::getTenant()->id),
-
                         Forms\Components\Group::make()
                             ->schema([
                                 Forms\Components\Select::make('produk_id')

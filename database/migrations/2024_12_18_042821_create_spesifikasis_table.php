@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
             $table->string('nama_spesifikasi');
             $table->string('tipe_input');
-            $table->string('satuan');
+            $table->string('satuan'); 
             $table->timestamps();
         });
     }

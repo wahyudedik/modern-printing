@@ -103,7 +103,7 @@ class EstimasiProdukResource extends Resource
                     ->label('Alat')
                     ->searchable()
                     ->sortable()
-                    ->description(fn(EstimasiProduk $record): string => $record->alat->spesifikasi ?? '-')
+                    ->description(fn(EstimasiProduk $record): string => $record->alat->spesifikasi_alat ?? '-')
                     ->copyable()
                     ->copyMessage('Nama alat disalin')
                     ->searchable()

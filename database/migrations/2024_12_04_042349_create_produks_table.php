@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
+ 
 return new class extends Migration
 {
     /**
@@ -15,10 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
             $table->json('gambar')->nullable();
-            $table->string('nama_produk');
+            $table->string('nama_produk'); 
             $table->text('deskripsi');
             $table->foreignId('kategori_id')->constrained('kategori_produks')->cascadeOnDelete();
-            $table->decimal('harga_dasar', 10, 2);
             $table->timestamps();
         });
     }

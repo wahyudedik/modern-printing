@@ -16,7 +16,6 @@ bug :
 14. fitur aktif dan non aktif akun belum fix
 
 POS System Flow: 
-
 1. Perbaikan alur transaksi POS:
 
     - Implementasi validasi stok secara real-time

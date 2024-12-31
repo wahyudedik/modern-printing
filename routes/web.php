@@ -60,4 +60,5 @@ Route::middleware([
         ->name('pos.customer.create');
     Route::get('/app/{tenant}/pos/invoice/{transaksi}/download', [InvoiceController::class, 'download'])
         ->name('pos.invoice.download');
+    Route::post('/pos/check-price', [PosController::class, 'checkPrice'])->name('pos.checkPrice');
 });

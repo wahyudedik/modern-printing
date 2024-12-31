@@ -19,9 +19,8 @@ class PosController extends Controller
         $products = Produk::with([
             'vendor',
             'kategori',
-            'spesifikasiProduk.spesifikasi',  // Make sure this relationship is loaded
-            'spesifikasiProduk.bahans', // Add this relationship
-            'wholesalePrice',
+            'spesifikasiProduk.spesifikasi',
+            'spesifikasiProduk.bahans.wholesalePrice', // Added wholesalePrice
             'estimasiProduk'
         ])->get();
 
@@ -34,10 +33,14 @@ class PosController extends Controller
     {
         $products = Produk::whereHas('kategori', function ($query) use ($slug) {
             $query->where('slug', $slug);
-        })->with('vendor', 'kategori', 'spesifikasiProduk', 'wholesalePrice', 'estimasiProduk')->get();
+        })->with([
+            'vendor',
+            'kategori',
+            'spesifikasiProduk.bahans.wholesalePrice', // Added wholesalePrice
+            'estimasiProduk'
+        ])->get();
 
         $categories = Produk::with('kategori')->get()->pluck('kategori')->unique();
-
         return view('pos.pos-home', compact('products', 'categories'));
     }
 
@@ -48,11 +51,14 @@ class PosController extends Controller
 
         $products = Produk::where('nama_produk', 'like', "%{$search}%")
             ->orWhere('deskripsi', 'like', "%{$search}%")
-            ->with('vendor', 'kategori', 'spesifikasiProduk', 'wholesalePrice', 'estimasiProduk')
-            ->get();
+            ->with([
+                'vendor',
+                'kategori',
+                'spesifikasiProduk.bahans.wholesalePrice', // Added wholesalePrice
+                'estimasiProduk'
+            ])->get();
 
         $categories = Produk::with('kategori')->get()->pluck('kategori')->unique();
-
         return view('pos.pos-home', compact('products', 'categories'));
     }
 
@@ -154,5 +160,53 @@ class PosController extends Controller
 
         return redirect()->route('pos.cart', ['tenant' => $tenant])
             ->with('success', 'Cart cleared successfully');
+    }
+
+    public function checkPrice(Request $request)
+    {
+        $product = Produk::findOrFail($request->product_id);
+        $quantity = $request->quantity ?? 1;
+        $specifications = $request->specifications ?? [];
+        $total = 0;
+        $specificationDetails = [];
+
+        foreach ($specifications as $specId => $value) {
+            $spesifikasiProduk = SpesifikasiProduk::with(['spesifikasi', 'bahans.wholesalePrice'])->find($specId);
+            $wholesalePrice = new WholesalePrice();
+
+            if ($spesifikasiProduk->spesifikasi->tipe_input === 'select') {
+                $bahan = Bahan::with('wholesalePrice')->find($value);
+                if ($bahan) {
+                    $finalPrice = $wholesalePrice->calculateFinalPrice($bahan->hpp, $quantity, $bahan->id);
+                    $total += $finalPrice * $quantity;
+
+                    $specificationDetails[] = [
+                        'name' => $spesifikasiProduk->spesifikasi->nama_spesifikasi,
+                        'value' => $bahan->nama_bahan,
+                        'price' => $finalPrice
+                    ];
+                }
+            } elseif ($spesifikasiProduk->spesifikasi->tipe_input === 'number') {
+                $inputValue = (int)$value;
+                $bahan = $spesifikasiProduk->bahans->first();
+                if ($bahan) {
+                    $pricePerUnit = $wholesalePrice->calculateFinalPrice($bahan->hpp, $inputValue, $bahan->id);
+                    $materialCost = $pricePerUnit * $inputValue; // Multiply by input value
+                    $total += $materialCost * $quantity;
+
+                    $specificationDetails[] = [
+                        'name' => $spesifikasiProduk->spesifikasi->nama_spesifikasi,
+                        'value' => $inputValue . ' ' . $spesifikasiProduk->spesifikasi->satuan,
+                        'price' => $materialCost
+                    ];
+                }
+            }
+        }
+
+        return response()->json([
+            'quantity' => $quantity,
+            'specifications' => $specificationDetails,
+            'totalPrice' => number_format($total, 0, ',', '.')
+        ]);
     }
 }

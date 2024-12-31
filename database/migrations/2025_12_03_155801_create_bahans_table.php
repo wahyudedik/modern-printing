@@ -15,16 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
             $table->string('nama_bahan');
-            $table->decimal('harga_per_satuan', 10, 2);
-            $table->string('satuan', 50);
+            $table->decimal('hpp', 10, 2);
+            $table->string('satuan', 50); 
             $table->string('stok')->nullable();
             $table->timestamps();
         });
 
-        Schema::create('wholesale_prices', function (Blueprint $table) {
+        Schema::create('harga_grosir', function (Blueprint $table) {
             $table->id();
             $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
-            $table->foreignId('produk_id')->constrained('produks')->cascadeOnDelete();
             $table->foreignId('bahan_id')->constrained('bahans')->cascadeOnDelete();
             $table->integer('min_quantity');
             $table->integer('max_quantity')->nullable();

@@ -26,12 +26,16 @@ class RegisterTeam extends RegisterTenant
                     ->maxLength(255)
                     ->live(onBlur: true)
                     ->reactive()
+                    ->placeholder('Enter vendor name')
                     ->afterStateUpdated(fn($state, callable $set) => $set('slug', str($state)->slug())),
                 TextInput::make('slug')
                     ->required()
                     ->maxLength(255)
                     ->reactive()
                     ->live(onBlur: true)
+                    ->placeholder('Auto-generated slug')
+                    ->disabled()
+                    ->dehydrated()
                     ->afterStateUpdated(
                         fn($state, callable $set, $get) =>
                         $set('slug', str($get('name'))->slug())
@@ -39,21 +43,36 @@ class RegisterTeam extends RegisterTenant
                 TextInput::make('email')
                     ->email()
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->placeholder('example@company.com')
+                    ->autocomplete('email'),
                 TextInput::make('website')
                     ->url()
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->placeholder('https://example.com')
+                    ->prefix('https://'),
                 TextInput::make('address')
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->placeholder('Enter complete address')
+                    ->columnSpanFull(),
                 TextInput::make('phone')
                     ->tel()
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->placeholder('09876543212')
+                    ->mask('99999999999')
+                    ->prefix('+'),
                 FileUpload::make('logo')
                     ->disk('public')
                     ->required()
-                    ->directory('vendor'),
+                    ->directory('vendor')
+                    ->image()
+                    ->imageResizeMode('cover')
+                    ->imageCropAspectRatio('16:9')
+                    ->imageResizeTargetWidth('1920')
+                    ->imageResizeTargetHeight('1080')
+                    ->maxSize(1024),
             ]);
     }
 

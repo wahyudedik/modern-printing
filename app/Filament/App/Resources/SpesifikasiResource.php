@@ -49,7 +49,6 @@ class SpesifikasiResource extends Resource
                                     ->required()
                                     ->searchable()
                                     ->options([
-                                        'text' => 'Text',
                                         'number' => 'Number',
                                         'select' => 'Select',
                                     ])

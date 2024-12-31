@@ -17,7 +17,6 @@ class Spesifikasi extends BaseModel
 
     const TIPE_INPUT = [
         'number' => 'number',
-        'text' => 'text',
         'select' => 'select'
     ];
 

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
             $table->string('kode')->unique();
-            $table->string('nama');
+            $table->string('nama'); 
             $table->string('alamat');
             $table->string('no_telp');
             $table->string('email');

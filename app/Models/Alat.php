@@ -11,14 +11,13 @@ class Alat extends BaseModel
     protected $fillable = [
         'vendor_id',
         'nama_alat',
-        'merk',
+        'merek',
         'model',
-        'spesifikasi',
+        'spesifikasi_alat',
         'status',
         'tanggal_pembelian',
         'kapasitas_cetak_per_jam',
-        'tersedia',
-        'keterangan'
+        'tersedia'
     ];
 
     protected $casts = [

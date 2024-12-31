@@ -6,11 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class WholesalePrice extends BaseModel
 {
-    protected $table = 'wholesale_prices';
+    protected $table = 'harga_grosir';
 
     protected $fillable = [
         'vendor_id',
-        'produk_id',
         'bahan_id',
         'min_quantity',
         'max_quantity',
@@ -19,7 +18,6 @@ class WholesalePrice extends BaseModel
 
     protected $casts = [
         'vendor_id' => 'integer',
-        'produk_id' => 'integer',
         'bahan_id' => 'integer',
         'min_quantity' => 'integer',
         'max_quantity' => 'integer',
@@ -33,11 +31,6 @@ class WholesalePrice extends BaseModel
     public function bahan()
     {
         return $this->belongsTo(Bahan::class, 'bahan_id');
-    }
-
-    public function produk()
-    {
-        return $this->belongsTo(Produk::class, 'produk_id');
     }
 
     public function getDiscountedPrice($quantity, $bahanId)

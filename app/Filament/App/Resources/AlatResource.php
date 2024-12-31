@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Collection;
 use App\Filament\App\Resources\AlatResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\AlatResource\RelationManagers;
+use PhpParser\Node\Stmt\Label;
 
 class AlatResource extends Resource
 {
@@ -57,7 +58,7 @@ class AlatResource extends Resource
                             ->autocomplete(),
                         Forms\Components\Grid::make(2)
                             ->schema([
-                                Forms\Components\TextInput::make('merk')
+                                Forms\Components\TextInput::make('merek')
                                     ->placeholder('Masukkan merk alat')
                                     ->prefixIcon('heroicon-m-building-office-2')
                                     ->maxLength(255),
@@ -66,7 +67,7 @@ class AlatResource extends Resource
                                     ->prefixIcon('heroicon-m-tag')
                                     ->maxLength(255),
                             ]),
-                        Forms\Components\Textarea::make('spesifikasi')
+                        Forms\Components\Textarea::make('spesifikasi_alat')
                             ->placeholder('Masukkan spesifikasi alat')
                             ->required()
                             ->rows(3)
@@ -133,7 +134,7 @@ class AlatResource extends Resource
                     ->copyable()
                     ->tooltip('Klik untuk menyalin')
                     ->icon('heroicon-m-wrench'),
-                Tables\Columns\TextColumn::make('merk')
+                Tables\Columns\TextColumn::make('merek')
                     ->wrap()
                     ->searchable()
                     ->icon('heroicon-m-building-office-2')
@@ -143,7 +144,7 @@ class AlatResource extends Resource
                     ->searchable()
                     ->icon('heroicon-m-tag')
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('spesifikasi')
+                Tables\Columns\TextColumn::make('spesifikasi_alat')
                     ->limit(50)
                     ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
                         $state = $column->getState();

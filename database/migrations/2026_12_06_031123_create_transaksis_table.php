@@ -20,9 +20,10 @@ return new class extends Migration
             $table->decimal('total_harga', 10, 2);
             $table->enum('status', ['pending', 'completed', 'cancelled', 'quality_check', 'processing'])->default('pending');
             $table->string('payment_method');
-            $table->string('estimasi_selesai');
+            $table->string('estimasi_selesai'); 
             $table->date('tanggal_dibuat');
             $table->integer('progress_percentage')->default(0);
+            $table->text('catatan')->nullable();
             $table->timestamps();
         });
 
