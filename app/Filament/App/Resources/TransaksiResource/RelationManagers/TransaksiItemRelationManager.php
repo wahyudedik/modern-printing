@@ -38,17 +38,7 @@ class TransaksiItemRelationManager extends RelationManager
                                     ->placeholder('Select a product')
                                     ->loadingMessage('Loading products...')
                                     ->searchPrompt('Search products'),
-                                Forms\Components\Select::make('bahan_id')
-                                    ->relationship('bahan', 'nama_bahan')
-                                    ->required()
-                                    ->searchable()
-                                    ->preload()
-                                    ->native(false)
-                                    ->label('Material')
-                                    ->placeholder('Select a material')
-                                    ->loadingMessage('Loading materials...')
-                                    ->searchPrompt('Search materials'),
-                            ])->columns(2),
+                            ])->columns(1),
 
                         Forms\Components\Section::make('Pricing & Quantity')
                             ->description('Enter the quantity and price details')
@@ -73,28 +63,7 @@ class TransaksiItemRelationManager extends RelationManager
                                     ->placeholder('Enter unit price')
                                     ->suffixIcon('heroicon-m-banknotes')
                                     ->hint('Price per unit'),
-                            ])->columns(2),
-
-                        Forms\Components\Section::make('Specifications')
-                            ->description('Select product specifications')
-                            ->icon('heroicon-o-adjustments-horizontal')
-                            ->collapsible()
-                            ->schema([
-                                Forms\Components\Select::make('spesifikasi')
-                                    ->multiple()
-                                    ->searchable()
-                                    ->preload()
-                                    ->native(false)
-                                    ->placeholder('Choose specifications')
-                                    ->loadingMessage('Loading specifications...')
-                                    ->options(function (TransaksiItem $record) {
-                                        $options = [];
-                                        $record->produk->spesifikasiProduk->each(function ($spek) use (&$options) {
-                                            $options[$spek->spesifikasi->nama_spesifikasi] = $spek->pilihan;
-                                        });
-                                        return $options;
-                                    })
-                            ])
+                            ])->columns(2)
                     ])
             ]);
     }
@@ -104,7 +73,6 @@ class TransaksiItemRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('id')
             ->columns([
-                // Tables\Columns\TextColumn::make('id'),
                 Tables\Columns\TextColumn::make('transaksi.id')
                     ->label('Transaction ID')
                     ->description('Unique identifier for this transaction')
@@ -122,14 +90,6 @@ class TransaksiItemRelationManager extends RelationManager
                     ->icon('heroicon-m-shopping-bag')
                     ->wrap()
                     ->tooltip('Click to view product details'),
-                Tables\Columns\TextColumn::make('bahan.nama_bahan')
-                    ->label('Material')
-                    ->description('Material type used')
-                    ->searchable()
-                    ->sortable()
-                    ->icon('heroicon-m-cube')
-                    ->badge()
-                    ->color('success'),
                 Tables\Columns\TextColumn::make('kuantitas')
                     ->label('Quantity')
                     ->description('Number of items ordered')
@@ -145,17 +105,6 @@ class TransaksiItemRelationManager extends RelationManager
                     ->icon('heroicon-m-banknotes')
                     ->color('success')
                     ->alignment(Alignment::End),
-                Tables\Columns\TextColumn::make('spesifikasi')
-                    ->label('Specifications')
-                    ->description('Product specifications and details')
-                    ->formatStateUsing(fn($state) => collect($state)->map(function ($item, $key) {
-                        return "$key: $item";
-                    })->join(', '))
-                    ->listWithLineBreaks()
-                    ->bulleted()
-                    ->icon('heroicon-m-adjustments-horizontal')
-                    ->wrap()
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created At')
                     ->description('Record creation timestamp')
@@ -182,6 +131,7 @@ class TransaksiItemRelationManager extends RelationManager
             ->actions([
                 // Tables\Actions\EditAction::make(),
                 // Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make(),
             ])
             ->bulkActions([
                 // Tables\Actions\BulkActionGroup::make([

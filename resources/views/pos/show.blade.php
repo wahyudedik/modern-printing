@@ -61,10 +61,6 @@
             font-weight: bold;
         }
 
-        tr:nth-child(even) {
-            background-color: white;
-        }
-
         .total {
             text-align: right;
             font-weight: bold;
@@ -81,34 +77,23 @@
             border-top: 2px solid black;
             color: black;
         }
-
-        .footer p {
-            margin: 5px 0;
-        }
-
-        @media print {
-            body {
-                background-color: white;
-                padding: 0;
-            }
-        }
     </style>
 </head>
 
 <body>
     <div class="container">
-        @if ($transaksi->vendor)
-            <div class="header">
-                <h1>{{ $transaksi->vendor->name }}</h1>
-                <p>{{ $transaksi->vendor->address }}</p>
-            </div>
-        @endif
+        <div class="header">
+            <h1>{{ $transaksi->vendor->name }}</h1>
+            <p>{{ $transaksi->vendor->address }}</p>
+        </div>
+
         <div class="invoice-info">
             <p><strong>Invoice #:</strong> {{ $transaksi->kode }}</p>
             <p><strong>Date:</strong> {{ $transaksi->tanggal_dibuat->format('d/m/Y') }}</p>
             <p><strong>Customer:</strong> {{ $transaksi->pelanggan->nama }}</p>
             <p><strong>Payment Method:</strong> {{ ucfirst($transaksi->payment_method) }}</p>
         </div>
+
         <table>
             <thead>
                 <tr>
@@ -140,6 +125,7 @@
                 @endforeach
             </tbody>
         </table>
+
         <div class="total">
             <p>Total: Rp {{ number_format($transaksi->total_harga, 0, ',', '.') }}</p>
         </div>

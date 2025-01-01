@@ -33,7 +33,6 @@
             @foreach ($cartItems as $index => $item)
                 <div class="card shadow-sm border-0 rounded-4 mb-3">
                     <div class="card-body p-4">
-                        <!-- Product Header -->
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="fw-bold text-dark mb-0">{{ $item['product_name'] }}</h5>
                             <button class="btn btn-light btn-sm rounded-circle" onclick="removeItem({{ $index }})">
@@ -41,24 +40,12 @@
                             </button>
                         </div>
 
-                        <!-- Quantity -->
                         <div class="d-flex justify-content-between border-bottom py-2">
                             <span class="text-muted">Quantity</span>
-                            <span class="fw-medium">
-                                {{ $item['quantity'] }} pcs
-                            </span>
+                            <span class="fw-medium">{{ $item['quantity'] }} pcs</span>
                         </div>
-
+                        <!-- Production Details -->
                         <div class="specifications-container">
-                            <!-- Base Price -->
-                            <div class="d-flex justify-content-between border-bottom py-2">
-                                <span class="text-muted">Harga Dasar</span>
-                                <span class="fw-medium">
-                                    {{ $item['quantity'] }} × Rp {{ number_format($item['base_price'], 0, ',', '.') }} =
-                                    Rp {{ number_format($item['base_price'] * $item['quantity'], 0, ',', '.') }}
-                                </span>
-                            </div>
-
                             <!-- Specifications -->
                             @foreach ($item['specifications'] as $specId => $spec)
                                 @php
@@ -67,80 +54,94 @@
                                         'bahans',
                                     ])->find($specId);
                                     $bahan = \App\Models\Bahan::find($spec['bahan_id']);
-                                    $hargaPerSatuan = $bahan ? $bahan->harga_per_satuan : 0;
                                 @endphp
                                 <div class="d-flex justify-content-between border-bottom py-2">
                                     <span class="text-muted">
-                                        {{ $spesifikasiProduk->spesifikasi->nama_spesifikasi }}
+                                        {{ $spec['nama_spesifikasi'] }}
                                     </span>
                                     <span class="fw-medium">
-                                        {{ $bahan->nama_bahan }}: {{ $item['quantity'] }} × Rp
-                                        {{ number_format($hargaPerSatuan) }} =
-                                        Rp {{ number_format($item['quantity'] * $hargaPerSatuan) }}
+                                        @if ($spec['input_type'] === 'select')
+                                            {{ $bahan->nama_bahan }}
+                                        @else
+                                            {{ $spec['value'] }} {{ $spesifikasiProduk->spesifikasi->satuan }}
+                                        @endif
+                                        : Rp {{ number_format($spec['price'], 0, ',', '.') }}
                                     </span>
                                 </div>
                             @endforeach
 
                             <!-- Production Time -->
                             @php
-                                $estimasiProduk = \App\Models\EstimasiProduk::where(
-                                    'produk_id',
-                                    $item['product_id'],
-                                )->first();
-                                $estimatedTime = $estimasiProduk
-                                    ? $estimasiProduk->calculateTotalProductionTime($item['quantity'])
-                                    : 0;
+                                $product = \App\Models\Produk::with('estimasiProduk.alat')->find($item['product_id']);
+                                $estimatedTime = $product->getEstimatedProductionTime($item['quantity']);
                             @endphp
                             <div class="d-flex justify-content-between border-bottom py-2">
                                 <span class="text-muted">Estimasi Waktu Produksi</span>
                                 <span class="fw-medium">{{ $estimatedTime }} menit</span>
                             </div>
 
+                            <!-- Equipment Used -->
+                            <div class="d-flex justify-content-between border-bottom py-2">
+                                <span class="text-muted">Alat Produksi</span>
+                                <span class="fw-medium">
+                                    {{ $product->estimasiProduk->pluck('alat.nama_alat')->implode(', ') }}
+                                </span>
+                            </div>
+
                             <!-- Total Price -->
                             <div class="d-flex justify-content-between pt-3">
                                 <span class="fw-bold">Total Item</span>
                                 <span class="fw-bold text-primary">
-                                    Rp
-                                    {{ number_format(
-                                        $item['base_price'] * $item['quantity'] +
-                                            collect($item['specifications'])->sum(function ($spec) use ($item) {
-                                                return $spec['harga_per_satuan'] * $item['quantity'];
-                                            }),
-                                        0,
-                                        ',',
-                                        '.',
-                                    ) }}
+                                    Rp {{ number_format($item['total_price'], 0, ',', '.') }}
                                 </span>
                             </div>
                         </div>
                     </div>
                 </div>
             @endforeach
-        </div>
+            <!-- Cart Summary -->
+            <div class="mt-4 border-t pt-4">
+                <!-- Order Summary -->
+                <div class="card shadow-sm border-0 rounded-4 mb-3">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Order Summary</h5>
 
-        <!-- Cart Summary -->
-        <div class="mt-4 border-t pt-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <h4 class="fw-bold text-dark">Total</h4>
-                <h4 class="fw-bold text-primary">
-                    Rp
-                    {{ number_format(
-                        collect($cartItems)->sum(function ($item) {
-                            $baseTotal = $item['base_price'] * $item['quantity'];
-                            $specTotal = 0;
-                    
-                            foreach ($item['specifications'] as $specId => $spec) {
-                                $hargaPerSatuan = $spec['harga_per_satuan'] ?? 0;
-                                $specTotal += $hargaPerSatuan * $item['quantity'];
-                            }
-                    
-                            return $baseTotal + $specTotal;
-                        }),
-                        0,
-                        ',',
-                        '.',
-                    ) }}
-                </h4>
+                        <!-- Total Items -->
+                        <div class="d-flex justify-content-between border-bottom py-2">
+                            <span class="text-muted">Total Items</span>
+                            <span class="fw-medium">{{ count($cartItems) }} items</span>
+                        </div>
+
+                        <!-- Total Quantity -->
+                        <div class="d-flex justify-content-between border-bottom py-2">
+                            <span class="text-muted">Total Quantity</span>
+                            <span class="fw-medium">
+                                {{ collect($cartItems)->sum('quantity') }} pcs
+                            </span>
+                        </div>
+
+                        <!-- Total Production Time -->
+                        <div class="d-flex justify-content-between border-bottom py-2">
+                            <span class="text-muted">Total Production Time</span>
+                            <span class="fw-medium">
+                                {{ collect($cartItems)->sum(function ($item) {
+                                    $product = \App\Models\Produk::with('estimasiProduk.alat')->find($item['product_id']);
+                                    return $product->getEstimatedProductionTime($item['quantity']);
+                                }) }}
+                                minutes
+                            </span>
+                        </div>
+
+                        <!-- Total Price -->
+                        <div class="d-flex justify-content-between pt-3">
+                            <h4 class="fw-bold text-dark mb-0">Total</h4>
+                            <h4 class="fw-bold text-primary mb-0">
+                                Rp
+                                {{ number_format(collect($cartItems)->sum('total_price'), 0, ',', '.') }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

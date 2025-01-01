@@ -35,16 +35,23 @@ class EstimasiProduk extends BaseModel
     {
         $setupTime = $this->waktu_persiapan;
         $productionTimePerUnit = $this->waktu_produksi_per_unit;
-        $alat = $this->alat;
 
-        // Factor in equipment workload
-        $workloadMultiplier = $this->getWorkloadMultiplier($alat);
+        // Get all equipment workload
+        $equipmentWorkloads = $this->produk->estimasiProduk->map(function ($estimasi) {
+            return [
+                'alat' => $estimasi->alat,
+                'workload' => $estimasi->getWorkloadMultiplier($estimasi->alat)
+            ];
+        });
+
+        // Calculate maximum workload factor
+        $maxWorkload = $equipmentWorkloads->max('workload');
 
         if ($area) {
-            return ($setupTime + ($area * $productionTimePerUnit * $quantity)) * $workloadMultiplier;
+            return ($setupTime + ($area * $productionTimePerUnit * $quantity)) * $maxWorkload;
         }
 
-        return ($setupTime + ($productionTimePerUnit * $quantity)) * $workloadMultiplier;
+        return ($setupTime + ($productionTimePerUnit * $quantity)) * $maxWorkload;
     }
 
     private function getWorkloadMultiplier($alat)

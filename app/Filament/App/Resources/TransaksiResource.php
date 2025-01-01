@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\TransaksiResource\Pages;
 use App\Filament\App\Resources\TransaksiResource\RelationManagers;
 use App\Filament\App\Resources\TransaksiResource\RelationManagers\TransaksiItemRelationManager;
+use App\Filament\App\Resources\TransaksiResource\RelationManagers\TransaksiItemSpecificationsRelationManager;
 
 class TransaksiResource extends Resource
 {
@@ -150,6 +151,9 @@ class TransaksiResource extends Resource
                             ->required()
                             ->default(now())
                             ->prefixIcon('heroicon-o-calendar'),
+                        Forms\Components\Textarea::make('catatan')
+                            ->label('Catatan')
+                            ->rows(3),
                     ])->columnSpan(['lg' => 1])
             ]);
     }
@@ -212,6 +216,14 @@ class TransaksiResource extends Resource
                     ->icon('heroicon-o-currency-dollar')
                     ->description(fn(Transaksi $record): string => "Payment: {$record->payment_method}")
                     ->tooltip('Total amount')
+                    ->size('sm'),
+
+                Tables\Columns\TextColumn::make('catatan')
+                    ->label('Catatan')
+                    ->searchable()
+                    ->sortable()
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->tooltip('Transaction notes')
                     ->size('sm'),
 
                 Tables\Columns\TextColumn::make('status')
@@ -378,6 +390,7 @@ class TransaksiResource extends Resource
     {
         return [
             TransaksiItemRelationManager::class,
+            TransaksiItemSpecificationsRelationManager::class,
         ];
     }
 

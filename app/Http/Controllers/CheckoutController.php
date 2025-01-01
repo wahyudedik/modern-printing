@@ -13,6 +13,7 @@ use Filament\Facades\Filament;
 use App\Models\SpesifikasiProduk;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class CheckoutController extends Controller
 {
@@ -20,68 +21,85 @@ class CheckoutController extends Controller
     {
         $vendor = \App\Models\Vendor::where('slug', request()->route('tenant'))->firstOrFail();
 
-        DB::beginTransaction();
-
-        $request->validate([
+        $validatedData = $request->validate([
             'pelanggan_id' => 'required|exists:pelanggans,id',
-            'payment_method' => 'required|in:cash,transfer,qris'
+            'payment_method' => 'required|in:cash,transfer,qris',
+            'catatan' => 'nullable|string'
         ]);
 
+        DB::beginTransaction();
         try {
-            $cart = session('cart');
-            if (empty($cart)) {
-                throw new \Exception('Cart is empty');
-            }
-
-            // Calculate total with verification
-            $totalHarga = collect($cart)->sum(function ($item) {
-                $baseTotal = $item['base_price'] * $item['quantity'];
-                $specTotal = collect($item['specifications'])->sum(function ($spec) use ($item) {
-                    return $spec['harga_per_satuan'] * $item['quantity'];
-                });
-                return $baseTotal + $specTotal;
+            $cartItems = session('cart', []);
+            $totalTime = collect($cartItems)->sum(function ($item) {
+                $product = Produk::with('estimasiProduk.alat')->find($item['product_id']);
+                return $product->getEstimatedProductionTime($item['quantity']);
             });
 
+            $latestPending = Transaksi::where('status', 'pending')
+                ->where('vendor_id', $vendor->id)
+                ->latest('estimasi_selesai')
+                ->first();
+
+            $startTime = $latestPending ? Carbon::parse($latestPending->estimasi_selesai) : now();
+            $estimatedCompletion = $startTime->addMinutes($totalTime);
+
             $transaksi = Transaksi::create([
-                'vendor_id' => $vendor->id, // Use vendor ID directly
-                'kode' => 'TRX-' . date('YmdHis'),
-                'user_id' => \Illuminate\Support\Facades\Auth::id(),
-                'pelanggan_id' => $request->pelanggan_id,
-                'total_harga' => $totalHarga,
+                'vendor_id' => $vendor->id,
+                'kode' => 'TRX-' . date('Ymd') . '-' . rand(1000, 9999),
+                'user_id' => Auth::id(),
+                'pelanggan_id' => $validatedData['pelanggan_id'],
+                'total_harga' => collect($cartItems)->sum('total_price'),
                 'status' => 'pending',
-                'payment_method' => $request->payment_method,
-                'estimasi_selesai' => $this->calculateEstimatedCompletion($cart),
+                'payment_method' => $validatedData['payment_method'],
+                'estimasi_selesai' => $estimatedCompletion,
                 'tanggal_dibuat' => now(),
                 'progress_percentage' => 0,
-                'current_stage' => 'pending'
+                'catatan' => $validatedData['catatan']
             ]);
 
-            foreach ($cart as $item) {
-                $firstSpec = collect($item['specifications'])->first();
-
-                TransaksiItem::create([
+            foreach ($cartItems as $item) {
+                $transaksiItem = $transaksi->transaksiItem()->create([
                     'vendor_id' => $vendor->id,
-                    'transaksi_id' => $transaksi->id,
                     'produk_id' => $item['product_id'],
-                    'bahan_id' => $firstSpec['bahan_id'],
                     'kuantitas' => $item['quantity'],
-                    'harga_satuan' => $item['base_price'],
-                    'spesifikasi' => $item['specifications']
+                    'harga_satuan' => $item['total_price'] / $item['quantity']
                 ]);
+
+                foreach ($item['specifications'] as $specId => $spec) {
+                    $transaksiItem->transaksiItemSpecifications()->create([
+                        'vendor_id' => $vendor->id,
+                        'spesifikasi_produk_id' => $specId,
+                        'bahan_id' => $spec['bahan_id'],
+                        'value' => $spec['value'],
+                        'input_type' => $spec['input_type'],
+                        'price' => $spec['price']
+                    ]);
+
+                    // Update stock
+                    $bahan = Bahan::find($spec['bahan_id']);
+                    if ($spec['input_type'] === 'number') {
+                        $bahan->decrement('stok', $spec['value'] * $item['quantity']);
+                    } else {
+                        $bahan->decrement('stok', $item['quantity']);
+                    }
+                }
             }
 
             // Update customer's last transaction timestamp
-            $pelanggan = Pelanggan::find($request->pelanggan_id);
+            $pelanggan = Pelanggan::find($validatedData['pelanggan_id']);
             $pelanggan->update([
                 'transaksi_terakhir' => now()
             ]);
 
             DB::commit();
             session()->forget('cart');
-
             return response()->json([
                 'success' => true,
-                'invoiceUrl' => route('pos.invoice.download', [
+                'invoiceUrl' => route('invoice.show', [
+                    'tenant' => request()->route('tenant'),
+                    'transaksi' => $transaksi->id
+                ]),
+                'downloadUrl' => route('pos.invoice.download', [
                     'tenant' => request()->route('tenant'),
                     'transaksi' => $transaksi->id
                 ]),
@@ -93,8 +111,8 @@ class CheckoutController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ], 422);
+                'message' => 'Transaction failed: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -131,10 +149,21 @@ class CheckoutController extends Controller
     {
         $cartItems = session('cart', []);
         $totalAmount = collect($cartItems)->sum('total_price');
-        $customers = Pelanggan::all();
-        $products = Produk::all(); // Add this line
+        $totalTime = collect($cartItems)->sum(function ($item) {
+            $product = Produk::with('estimasiProduk.alat')->find($item['product_id']);
+            return $product->getEstimatedProductionTime($item['quantity']);
+        });
 
-        return view('pos.checkout', compact('cartItems', 'totalAmount', 'customers', 'products')); // Add products to compact
+        $customers = Pelanggan::all();
+        $products = Produk::all();
+
+        return view('pos.checkout', compact(
+            'cartItems',
+            'totalAmount',
+            'totalTime',
+            'customers',
+            'products'
+        ));
     }
 
     public function createCustomer(Request $request)

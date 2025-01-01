@@ -1,7 +1,6 @@
 @extends('pos.index')
 
 @section('content')
-
     @php
         $vendor = \App\Models\Vendor::where('slug', request()->route('tenant'))->firstOrFail();
     @endphp
@@ -32,6 +31,17 @@
                 <div class="alert alert-danger">
                     {{ session('error') }}
                 </div>
+            @endif
+
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert" id="successAlert">
+                    {{ session('success') }}
+                </div>
+                <script>
+                    setTimeout(function() {
+                        document.getElementById('successAlert').remove();
+                    }, 3000);
+                </script>
             @endif
 
             <div class="card-body p-4">
@@ -65,76 +75,121 @@
                                     <option value="qris">QRIS</option>
                                 </select>
                             </div>
-                        </div>
 
+                            <div class="mb-3">
+                                <label class="form-label">Notes</label>
+                                <textarea name="catatan" class="form-control" rows="3"
+                                    placeholder="Add any special instructions or notes here..."></textarea>
+                            </div>
+
+                        </div>
                         <div class="col-md-6">
                             <h4 class="mb-4">Order Summary</h4>
                             @foreach ($cartItems as $index => $item)
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>{{ $item['product_name'] }} (x{{ $item['quantity'] }})</span>
-                                    <span>Rp
-                                        {{ number_format(
-                                            $item['base_price'] * $item['quantity'] +
-                                                collect($item['specifications'])->sum(function ($spec) use ($item) {
-                                                    return $spec['harga_per_satuan'] * $item['quantity'];
-                                                }),
-                                            0,
-                                            ',',
-                                            '.',
-                                        ) }}</span>
+                                <div class="card shadow-sm border-0 rounded-4 mb-3">
+                                    <div class="card-body">
+                                        <h5 class="fw-bold mb-3">{{ $item['product_name'] }} (x{{ $item['quantity'] }})</h5>
+
+                                        <!-- Specifications -->
+                                        @foreach ($item['specifications'] as $specId => $spec)
+                                            <div class="d-flex justify-content-between border-bottom py-2">
+                                                <span class="text-muted">{{ $spec['nama_spesifikasi'] }}</span>
+                                                <span class="fw-medium">
+                                                    @if ($spec['input_type'] === 'select')
+                                                        {{ \App\Models\Bahan::find($spec['bahan_id'])->nama_bahan }}
+                                                    @else
+                                                        {{ $spec['value'] }}
+                                                        {{ \App\Models\SpesifikasiProduk::find($specId)->spesifikasi->satuan }}
+                                                    @endif
+                                                    : Rp {{ number_format($spec['price'], 0, ',', '.') }}
+                                                </span>
+                                            </div>
+                                        @endforeach
+
+                                        <!-- Production Details -->
+                                        @php
+                                            $product = \App\Models\Produk::with('estimasiProduk.alat')->find(
+                                                $item['product_id'],
+                                            );
+                                            $estimatedTime = $product->getEstimatedProductionTime($item['quantity']);
+                                        @endphp
+                                        <div class="d-flex justify-content-between border-bottom py-2">
+                                            <span class="text-muted">Estimasi Waktu</span>
+                                            <span class="fw-medium">{{ $estimatedTime }} menit</span>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between border-bottom py-2">
+                                            <span class="text-muted">Alat Produksi</span>
+                                            <span class="fw-medium">
+                                                {{ $product->estimasiProduk->pluck('alat.nama_alat')->implode(', ') }}
+                                            </span>
+                                        </div>
+
+                                        <!-- Item Total -->
+                                        <div class="d-flex justify-content-between pt-3">
+                                            <span class="fw-bold">Subtotal</span>
+                                            <span class="fw-bold text-primary">
+                                                Rp {{ number_format($item['total_price'], 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <!-- Hidden inputs but keep visible summary -->
+                                <!-- Hidden inputs for form submission -->
                                 <input type="hidden" name="items[{{ $index }}][product_id]"
                                     value="{{ $item['product_id'] }}">
                                 <input type="hidden" name="items[{{ $index }}][quantity]"
                                     value="{{ $item['quantity'] }}">
-                                <input type="hidden" name="items[{{ $index }}][base_price]"
-                                    value="{{ $item['base_price'] }}">
-                                <input type="hidden" name="items[{{ $index }}][product_name]"
-                                    value="{{ $item['product_name'] }}">
-
                                 @foreach ($item['specifications'] as $specId => $spec)
                                     <input type="hidden"
                                         name="items[{{ $index }}][specifications][{{ $specId }}][bahan_id]"
-                                        value="{{ $spec['bahan_id'] ?? '' }}">
+                                        value="{{ $spec['bahan_id'] }}">
                                     <input type="hidden"
                                         name="items[{{ $index }}][specifications][{{ $specId }}][value]"
                                         value="{{ $spec['value'] }}">
                                     <input type="hidden"
-                                        name="items[{{ $index }}][specifications][{{ $specId }}][harga_per_satuan]"
-                                        value="{{ $spec['harga_per_satuan'] }}">
+                                        name="items[{{ $index }}][specifications][{{ $specId }}][input_type]"
+                                        value="{{ $spec['input_type'] }}">
+                                    <input type="hidden"
+                                        name="items[{{ $index }}][specifications][{{ $specId }}][price]"
+                                        value="{{ $spec['price'] }}">
                                 @endforeach
                             @endforeach
-                            <hr>
-                            <div class="d-flex justify-content-between mb-4">
-                                <strong>Total</strong>
-                                <strong>Rp
-                                    {{ number_format(
-                                        collect($cartItems)->sum(function ($item) {
-                                            $baseTotal = $item['base_price'] * $item['quantity'];
-                                            $specTotal = collect($item['specifications'])->sum(function ($spec) use ($item) {
-                                                return $spec['harga_per_satuan'] * $item['quantity'];
-                                            });
-                                            return $baseTotal + $specTotal;
-                                        }),
-                                        0,
-                                        ',',
-                                        '.',
-                                    ) }}</strong>
+
+                            <!-- Order Totals -->
+                            <div class="card shadow-sm border-0 rounded-4">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <span class="text-muted">Total Items</span>
+                                        <span class="fw-medium">{{ count($cartItems) }} items</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <span class="text-muted">Total Quantity</span>
+                                        <span class="fw-medium">{{ collect($cartItems)->sum('quantity') }} pcs</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <span class="text-muted">Total Production Time</span>
+                                        <span class="fw-medium">{{ $totalTime }} minutes</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between pt-3">
+                                        <h4 class="fw-bold mb-0">Grand Total</h4>
+                                        <h4 class="fw-bold text-primary mb-0">
+                                            Rp {{ number_format($totalAmount, 0, ',', '.') }}
+                                        </h4>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a href="{{ route('pos.cart', ['tenant' => request()->route('tenant')]) }}"
-                            class="btn btn-light rounded-pill px-4">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Cart
-                        </a>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4">
-                            <i class="fas fa-check me-2"></i>Complete Order
-                        </button>
-                    </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{{ route('pos.cart', ['tenant' => request()->route('tenant')]) }}"
+                                class="btn btn-light rounded-pill px-4">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                            </a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="fas fa-check me-2"></i>Complete Order
+                            </button>
+                        </div>
                 </form>
             </div>
         </div>
@@ -148,7 +203,8 @@
                     <h5 class="modal-title">Add New Customer</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('pos.customer.create', ['tenant' => request()->route('tenant')]) }}" method="POST">
+                <form action="{{ route('pos.customer.create', ['tenant' => request()->route('tenant')]) }}"
+                    method="POST">
                     @csrf
                     <div class="modal-body">
                         <div class="mb-3">
@@ -231,9 +287,15 @@
 
         document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const formData = new FormData(this);
+
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            submitButton.disabled = true;
 
             try {
+                const formData = new FormData(this);
+
                 const response = await fetch(this.action, {
                     method: 'POST',
                     body: formData,
@@ -246,13 +308,33 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // Open web view in new tab
                     window.open(data.invoiceUrl, '_blank');
-                    window.location.href = data.redirectUrl;
-                } else {
-                    throw new Error(data.message || 'Checkout failed');
+
+                    // Download PDF version
+                    fetch(data.downloadUrl)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = "invoice.pdf";
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                        });
+
+                    // Redirect main window
+                    setTimeout(() => {
+                        window.location.href = data.redirectUrl;
+                    }, 1500);
                 }
             } catch (error) {
                 alert(error.message);
+            } finally {
+                // Reset button state
+                submitButton.innerHTML = '<i class="fas fa-check me-2"></i>Complete Order';
+                submitButton.disabled = false;
             }
         });
     </script>

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('total_harga', 10, 2);
             $table->enum('status', ['pending', 'completed', 'cancelled', 'quality_check', 'processing'])->default('pending');
             $table->string('payment_method');
-            $table->string('estimasi_selesai'); 
+            $table->timestamp('estimasi_selesai');
             $table->date('tanggal_dibuat');
             $table->integer('progress_percentage')->default(0);
             $table->text('catatan')->nullable();
@@ -32,10 +32,20 @@ return new class extends Migration
             $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
             $table->foreignId('transaksi_id')->constrained('transaksis')->cascadeOnDelete();
             $table->foreignId('produk_id')->constrained('produks')->cascadeOnDelete();
-            $table->foreignId('bahan_id')->constrained('bahans')->cascadeOnDelete();
             $table->integer('kuantitas');
             $table->decimal('harga_satuan', 10, 2);
-            $table->json('spesifikasi');
+            $table->timestamps();
+        });
+
+        Schema::create('transaksi_item_specifications', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('vendor_id')->constrained('vendors')->cascadeOnDelete();
+            $table->foreignId('transaksi_item_id')->constrained('transaksi_items')->cascadeOnDelete();
+            $table->foreignId('spesifikasi_produk_id')->constrained('spesifikasi_produks')->cascadeOnDelete();
+            $table->foreignId('bahan_id')->constrained('bahans')->cascadeOnDelete();
+            $table->string('value');
+            $table->string('input_type');
+            $table->decimal('price', 10, 2);
             $table->timestamps();
         });
     }
@@ -47,5 +57,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('transaksis');
         Schema::dropIfExists('transaksi_items');
+        Schema::dropIfExists('transaksi_item_specifications');
     }
 };

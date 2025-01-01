@@ -42,6 +42,11 @@ class Bahan extends BaseModel
         return $this->belongsToMany(SpesifikasiProduk::class, 'spesifikasi_produk_bahans', 'bahan_id', 'spesifikasi_produk_id');
     }
 
+    public function transaksiItemSpecifications()
+    {
+        return $this->hasMany(TransaksiItemSpecifications::class, 'bahan_id');
+    }
+
     public function checkStockLevel()
     {
         if ($this->stok <= 10) {

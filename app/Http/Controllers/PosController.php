@@ -68,34 +68,52 @@ class PosController extends Controller
         $product = Produk::findOrFail($request->product_id);
         $quantity = $request->quantity;
         $specifications = $request->specifications;
-        $basePrice = $product->harga_dasar * $quantity; // Multiply base price by quantity
         $specDetails = [];
         $totalSpecPrice = 0;
+        $wholesalePrice = new WholesalePrice();
 
         foreach ($specifications as $specId => $value) {
             $spesifikasiProduk = SpesifikasiProduk::with(['spesifikasi', 'bahans'])->find($specId);
-            $bahan = Bahan::find($value);
 
-            if ($spesifikasiProduk && $bahan) {
-                $specPrice = $bahan->harga_per_satuan * $quantity; // Multiply spec price by quantity
-                $totalSpecPrice += $specPrice;
+            if ($spesifikasiProduk->spesifikasi->tipe_input === 'select') {
+                $bahan = Bahan::with('wholesalePrice')->find($value);
+                if ($bahan) {
+                    $finalPrice = $wholesalePrice->calculateFinalPrice($bahan->hpp, $quantity, $bahan->id);
+                    $specPrice = $finalPrice * $quantity;
 
-                $specDetails[$specId] = [
-                    'value' => $value,
-                    'bahan_id' => $bahan->id,
-                    'harga_per_satuan' => $bahan->harga_per_satuan,
-                    'price' => $specPrice
-                ];
+                    $specDetails[$specId] = [
+                        'value' => $value,
+                        'bahan_id' => $bahan->id,
+                        'input_type' => 'select',
+                        'price' => $specPrice,
+                        'nama_spesifikasi' => $spesifikasiProduk->spesifikasi->nama_spesifikasi
+                    ];
+                }
+            } else {
+                $inputValue = (int)$value;
+                $bahan = $spesifikasiProduk->bahans->first();
+                if ($bahan) {
+                    $pricePerUnit = $wholesalePrice->calculateFinalPrice($bahan->hpp, $inputValue, $bahan->id);
+                    $specPrice = $pricePerUnit * $inputValue * $quantity;
+
+                    $specDetails[$specId] = [
+                        'value' => $inputValue,
+                        'bahan_id' => $bahan->id,
+                        'input_type' => 'number',
+                        'price' => $specPrice,
+                        'nama_spesifikasi' => $spesifikasiProduk->spesifikasi->nama_spesifikasi
+                    ];
+                }
             }
+            $totalSpecPrice += $specPrice;
         }
 
         $cartItem = [
             'product_id' => $product->id,
             'product_name' => $product->nama_produk,
-            'base_price' => $product->harga_dasar,
             'quantity' => $quantity,
             'specifications' => $specDetails,
-            'total_price' => $basePrice + $totalSpecPrice,
+            'total_price' => $totalSpecPrice,
             'estimated_time' => EstimasiProduk::where('produk_id', $product->id)
                 ->first()?->calculateTotalProductionTime($quantity) ?? 0
         ];
@@ -111,7 +129,6 @@ class PosController extends Controller
             ->with('success', 'Product added to cart successfully');
     }
 
-
     // fungsi untuk menampilkan keranjang
     public function cart()
     {
@@ -119,20 +136,30 @@ class PosController extends Controller
         $products = Produk::all();
 
         foreach ($cartItems as &$item) {
-            $itemTotal = $item['base_price'];
-            $quantity = $item['quantity'] ?? 1;
+            $totalPrice = 0;
+            $quantity = $item['quantity'];
 
             foreach ($item['specifications'] as $specId => $spec) {
-                $spesifikasiProduk = SpesifikasiProduk::with(['spesifikasi', 'bahans'])->find($specId);
+                $spesifikasiProduk = SpesifikasiProduk::with(['spesifikasi', 'bahans.wholesalePrice'])->find($specId);
                 $bahan = Bahan::find($spec['bahan_id']);
+                $wholesalePrice = new WholesalePrice();
 
-                $hargaPerSatuan = $bahan ? $bahan->harga_per_satuan : 0;
-                $specPrice = $spesifikasiProduk->calculatePrice($spec['value'], $spec['bahan_id'], $item['quantity']);
+                if (
+                    $spec['input_type'] === 'select'
+                ) {
+                    $finalPrice = $wholesalePrice->calculateFinalPrice($bahan->hpp, $quantity, $bahan->id);
+                    $specPrice = $finalPrice * $quantity;
+                } else {
+                    $inputValue = (int)$spec['value'];
+                    $pricePerUnit = $wholesalePrice->calculateFinalPrice($bahan->hpp, $inputValue, $bahan->id);
+                    $specPrice = $pricePerUnit * $inputValue * $quantity;
+                }
 
-                $itemTotal += $specPrice;
+                $totalPrice += $specPrice;
+                $item['specifications'][$specId]['price'] = $specPrice;
             }
 
-            $item['total'] = $itemTotal * $quantity;
+            $item['total_price'] = $totalPrice;
         }
 
         return view('pos.cart', compact('cartItems', 'products'));

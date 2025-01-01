@@ -28,6 +28,7 @@ class Transaksi extends BaseModel
         'estimasi_selesai',
         'tanggal_dibuat',
         'progress_percentage',
+        'catatan'
     ];
 
     protected $casts = [
@@ -53,6 +54,16 @@ class Transaksi extends BaseModel
     public function transaksiItem()
     {
         return $this->hasMany(TransaksiItem::class, 'transaksi_id');
+    }
+
+    public function transaksiItemSpecifications()
+    {
+        return $this->hasManyThrough(
+            TransaksiItemSpecifications::class,
+            TransaksiItem::class,
+            'transaksi_id',
+            'transaksi_item_id'
+        );
     }
 
     protected static function booted()

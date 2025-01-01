@@ -12,17 +12,15 @@ class TransaksiItem extends BaseModel
         'vendor_id',
         'transaksi_id',
         'produk_id',
-        'bahan_id',
         'kuantitas',
-        'harga_satuan',
-        'spesifikasi'
+        'harga_satuan'
     ];
 
     protected $casts = [
         'kuantitas' => 'integer',
-        'harga_satuan' => 'decimal:2',
-        'spesifikasi' => 'json'
+        'harga_satuan' => 'decimal:2'
     ];
+
     public function vendor()
     {
         return $this->belongsTo(Vendor::class, 'vendor_id');
@@ -38,9 +36,9 @@ class TransaksiItem extends BaseModel
         return $this->belongsTo(Produk::class, 'produk_id');
     }
 
-    public function bahan()
+    public function transaksiItemSpecifications()
     {
-        return $this->belongsTo(Bahan::class, 'bahan_id');
+        return $this->hasMany(TransaksiItemSpecifications::class, 'transaksi_item_id');
     }
 
     protected static function booted()
@@ -53,5 +51,4 @@ class TransaksiItem extends BaseModel
             }
         });
     }
-
 }

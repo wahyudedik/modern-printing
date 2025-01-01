@@ -50,15 +50,18 @@ Route::middleware([
         ->name('pos.removeItem');
     Route::get('/app/{tenant}/pos/cart/clear', [PosController::class, 'clearCart'])
         ->name('pos.clearCart');
-    Route::post('/app/{tenant}/pos/calculate-price', [PosController::class, 'calculatePrice'])
-        ->name('pos.calculatePrice');
+    Route::post('/pos/check-price', [PosController::class, 'checkPrice'])
+        ->name('pos.checkPrice');
+    // Route::post('/app/{tenant}/pos/calculate-price', [PosController::class, 'calculatePrice'])
+    //     ->name('pos.calculatePrice');
     Route::get('/app/{tenant}/pos/checkout', [CheckoutController::class, 'show'])
         ->name('pos.checkout');
     Route::post('/app/{tenant}/pos/checkout', [CheckoutController::class, 'process'])
         ->name('pos.checkout.process');
     Route::post('/app/{tenant}/pos/customer/create', [CheckoutController::class, 'createCustomer'])
         ->name('pos.customer.create');
+    Route::get('/app/{tenant}/pos/invoice/{transaksi}', [InvoiceController::class, 'show'])
+        ->name('invoice.show');
     Route::get('/app/{tenant}/pos/invoice/{transaksi}/download', [InvoiceController::class, 'download'])
         ->name('pos.invoice.download');
-    Route::post('/pos/check-price', [PosController::class, 'checkPrice'])->name('pos.checkPrice');
 });

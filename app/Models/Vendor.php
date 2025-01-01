@@ -18,7 +18,7 @@ class Vendor extends Model implements HasAvatar
         'address',
         'phone',
         'logo',
-        'status', 
+        'status',
     ];
 
     protected $casts = [
@@ -111,4 +111,8 @@ class Vendor extends Model implements HasAvatar
         return $this->hasMany(EstimasiProduk::class, 'vendor_id');
     }
 
+    public function transaksiItemSpecifications()
+    {
+        return $this->hasMany(TransaksiItemSpecifications::class, 'vendor_id');
+    }
 }

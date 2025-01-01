@@ -35,6 +35,11 @@ class SpesifikasiProduk extends BaseModel
         return $this->belongsTo(Spesifikasi::class, 'spesifikasi_id');
     }
 
+    public function transaksiItemSpecifications()
+    {
+        return $this->hasMany(TransaksiItemSpecifications::class, 'spesifikasi_produk_id');
+    }
+
     public function bahans()
     {
         $tenantId = Filament::getTenant()?->id ?? null;

@@ -39,7 +39,7 @@ class OrderStatusChanged extends Notification
     {
         $status = [
             'pending' => 'Order Received',
-            'processing' => 'In Production',
+            'processing' => 'In Production', 
             'quality_check' => 'Quality Check',
             'completed' => 'Ready for Pickup',
             'cancelled' => 'Order Cancelled'  // Added cancel message

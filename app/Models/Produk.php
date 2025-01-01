@@ -34,7 +34,7 @@ class Produk extends BaseModel
     {
         return $this->hasMany(SpesifikasiProduk::class, 'produk_id');
     }
-    
+
     public function estimasiProduk()
     {
         return $this->hasMany(EstimasiProduk::class, 'produk_id');
@@ -51,5 +51,17 @@ class Produk extends BaseModel
             ];
         });
         return $specs;
+    }
+
+    public function getEstimatedProductionTime($quantity)
+    {
+        $totalTime = 0;
+
+        // Calculate time for each equipment process
+        $this->estimasiProduk->each(function ($estimasi) use (&$totalTime, $quantity) {
+            $totalTime += $estimasi->calculateTotalProductionTime($quantity);
+        });
+
+        return $totalTime;
     }
 }
