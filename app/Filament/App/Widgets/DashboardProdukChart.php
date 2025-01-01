@@ -80,7 +80,7 @@ class DashboardProdukChart extends ChartWidget
             ->get();
 
         return [
-            'products' => $topProducts->map(fn($item) => $item->produk->nama_produk)->toArray(),
+            'products' => $topProducts->map(fn($item) => $item->produk?->nama_produk ?? 'Produk Tidak Ditemukan')->toArray(),
             'quantities' => $topProducts->pluck('total_sold')->toArray(),
         ];
     }

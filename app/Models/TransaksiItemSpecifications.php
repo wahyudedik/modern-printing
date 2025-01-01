@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TransaksiItemSpecifications extends Model
+class TransaksiItemSpecifications extends BaseModel
 {
     protected $table = 'transaksi_item_specifications';
 

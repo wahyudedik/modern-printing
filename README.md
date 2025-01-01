@@ -15,6 +15,7 @@ bug :
 14. fitur aktif dan non aktif akun vendor belum fix
 13. tambah statoverview pada dashboard admin belum fix (total user, total vendor, total produk, total transaksi)
 12. perbaikan vendor aktifity
+11. perbaikan dashboard widget per vendor masih bocor belum fix (semua vendor bisa lihat transaksi)
 
 
 POS System Flow: 
