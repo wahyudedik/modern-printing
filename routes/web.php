@@ -34,7 +34,7 @@ Route::get('/account/inactive', function () {
 
 Route::middleware([
     Authenticate::class . ':app',
-    ApplyTenantScopes::class
+    ApplyTenantScopes::class,
 ])->group(function () {
     Route::get('/app/{tenant}/pos', [PosController::class, 'index'])
         ->name('pos.index');

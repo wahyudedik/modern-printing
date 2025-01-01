@@ -97,12 +97,17 @@ class AppPanelProvider extends PanelProvider
                 'profile' => MenuItem::make()
                     ->label('Edit vendor profile')
                     ->visible(fn() => Auth::user()->usertype === 'user' ||  Auth::user()->usertype === 'admin'),
+                // MenuItem::make()
+                //     ->label('Point of Sale')
+                //     ->icon('heroicon-o-shopping-cart')
+                //     ->url(fn() => '/app/' . Filament::getTenant()->slug . '/pos')
+                //     ->openUrlInNewTab(),
                 MenuItem::make()
                     ->label('Point of Sale')
                     ->icon('heroicon-o-shopping-cart')
-                    ->url(fn() => '/app/' . Filament::getTenant()->slug . '/pos')
+                    ->url(fn() => route('pos.index', ['tenant' => Filament::getTenant()?->slug]))
+                    ->visible(fn() => Filament::getTenant() !== null)
                     ->openUrlInNewTab()
-
             ])
             ->tenantMiddleware([
                 // Resource::scopeToTenant(true),
