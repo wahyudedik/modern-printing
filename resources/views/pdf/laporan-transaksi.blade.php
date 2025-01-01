@@ -198,7 +198,7 @@
                             @foreach ($transaction->transaksiItem as $item)
                                 <li>
                                     {{ $item->produk->nama_produk }}
-                                    <ul>
+                                    {{-- <ul>
                                         @foreach ($item->transaksiItemSpecifications as $spec)
                                             <li>
                                                 {{ $spec->spesifikasiProduk->spesifikasi->nama_spesifikasi }}:
@@ -207,7 +207,7 @@
                                                 {{ $spec->spesifikasiProduk->spesifikasi->satuan }})
                                             </li>
                                         @endforeach
-                                    </ul>
+                                    </ul> --}}
                                 </li>
                             @endforeach
                         </ul>

@@ -7,52 +7,54 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.6;
+            font-size: 12px;
+            line-height: 1.4;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             background-color: white;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 400px;
             margin: 0 auto;
             background-color: white;
-            padding: 30px;
+            padding: 15px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid black;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid black;
         }
 
         .header h1 {
             color: black;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            font-size: 16px;
         }
 
         .invoice-info {
-            margin-bottom: 30px;
-            padding: 15px;
+            margin-bottom: 15px;
+            padding: 8px;
             border: 1px solid black;
         }
 
         .invoice-info p {
-            margin: 5px 0;
+            margin: 3px 0;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         th,
         td {
-            padding: 12px 15px;
+            padding: 6px 8px;
             border: 1px solid black;
+            font-size: 11px;
         }
 
         th {
@@ -61,29 +63,26 @@
             font-weight: bold;
         }
 
-        tr:nth-child(even) {
-            background-color: white;
-        }
-
         .total {
             text-align: right;
             font-weight: bold;
-            font-size: 18px;
-            padding: 15px;
+            font-size: 14px;
+            padding: 8px;
             border: 1px solid black;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         .footer {
             text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid black;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid black;
             color: black;
+            font-size: 11px;
         }
 
         .footer p {
-            margin: 5px 0;
+            margin: 3px 0;
         }
 
         @media print {
@@ -114,7 +113,7 @@
                 <tr>
                     <th>Product</th>
                     <th>Specifications</th>
-                    <th>Quantity</th>
+                    <th>Qty</th>
                     <th>Total</th>
                 </tr>
             </thead>
@@ -143,7 +142,6 @@
         <div class="total">
             <p>Total: Rp {{ number_format($transaksi->total_harga, 0, ',', '.') }}</p>
         </div>
-
         <div class="footer">
             <p>Thank you for your business!</p>
             <p>Estimated Completion: {{ \Carbon\Carbon::parse($transaksi->estimasi_selesai)->format('d/m/Y H:i') }}</p>

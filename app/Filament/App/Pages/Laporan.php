@@ -133,8 +133,17 @@ class Laporan extends Page implements HasTable
 
                 TextColumn::make('transaksiItem')
                     ->label('Materials & Specifications')
-                    ->formatStateUsing(function ($state, $record) {
-                        return $record->transaksiItem->map(function ($item) {
+                    ->state(function ($record) {
+                        // Get unique products first
+                        $uniqueProducts = [];
+                        foreach ($record->transaksiItem as $item) {
+                            $key = $item->produk_id;
+                            if (!isset($uniqueProducts[$key])) {
+                                $uniqueProducts[$key] = $item;
+                            }
+                        }
+                        // Format the output for unique products only
+                        $output = collect($uniqueProducts)->map(function ($item) {
                             $productName = $item->produk->nama_produk;
                             $specs = $item->transaksiItemSpecifications->map(function ($spec) use ($item) {
                                 $value = $spec->input_type === 'select'
@@ -142,17 +151,18 @@ class Laporan extends Page implements HasTable
                                     : "<span class='font-medium text-primary-600'>{$spec->value} {$spec->spesifikasiProduk->spesifikasi->satuan}</span>";
 
                                 return "<div class='flex items-center gap-1'>
-                                    <span class='text-gray-600'>{$spec->spesifikasiProduk->spesifikasi->nama_spesifikasi}:</span> 
-                                    {$value} 
-                                    <span class='text-gray-500 text-sm'>(x{$item->kuantitas})</span>
-                                </div>";
+                                            <span class='text-gray-600'>{$spec->spesifikasiProduk->spesifikasi->nama_spesifikasi}:</span>
+                                            {$value}
+                                            <span class='text-gray-500 text-sm'>(x{$item->kuantitas})</span>
+                                        </div>";
                             })->join("\n");
 
                             return "<div class='space-y-2'>
-                                <div class='font-semibold text-gray-900'>{$productName} :</div>
-                                <div class='pl-4 space-y-1'>{$specs}</div>
-                            </div>";
+                                        <div class='font-semibold text-gray-900'>{$productName} :</div>
+                                        <div class='pl-4 space-y-1'>{$specs}</div>
+                                    </div>";
                         })->join("\n<hr class='my-2 border-gray-200'>\n");
+                        return $output;
                     })
                     ->listWithLineBreaks()
                     ->searchable()

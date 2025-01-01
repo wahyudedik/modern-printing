@@ -12,9 +12,9 @@
 bug :
 20. loadingnya lama pada saat complete order belum fix
 19. cek dan perbaikan plugin theme belum fix
-18. fitur create invoice di transaksi resource belum fix
-16. fitur create spk di transaksi resource belum fix
 14. fitur aktif dan non aktif akun vendor belum fix
+13. tambah statoverview pada dashboard admin belum fix (total user, total vendor, total produk, total transaksi)
+12. perbaikan vendor aktifity
 
 
 POS System Flow: 

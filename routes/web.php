@@ -50,7 +50,7 @@ Route::middleware([
         ->name('pos.removeItem');
     Route::get('/app/{tenant}/pos/cart/clear', [PosController::class, 'clearCart'])
         ->name('pos.clearCart');
-    Route::post('/pos/check-price', [PosController::class, 'checkPrice'])
+    Route::post('/app/{tenant}/pos/check-price', [PosController::class, 'checkPrice'])
         ->name('pos.checkPrice');
     // Route::post('/app/{tenant}/pos/calculate-price', [PosController::class, 'calculatePrice'])
     //     ->name('pos.calculatePrice');

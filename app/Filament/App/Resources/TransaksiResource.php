@@ -15,6 +15,7 @@ use Filament\Tables\Table;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -23,6 +24,7 @@ use App\Filament\App\Resources\TransaksiResource\Pages;
 use App\Filament\App\Resources\TransaksiResource\RelationManagers;
 use App\Filament\App\Resources\TransaksiResource\RelationManagers\TransaksiItemRelationManager;
 use App\Filament\App\Resources\TransaksiResource\RelationManagers\TransaksiItemSpecificationsRelationManager;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TransaksiResource extends Resource
 {
@@ -292,7 +294,49 @@ class TransaksiResource extends Resource
                         ->modalAlignment('center'),
                 ])->tooltip('Actions')
                     ->color('gray')
-                    ->icon('heroicon-m-ellipsis-horizontal')
+                    ->icon('heroicon-m-ellipsis-horizontal'),
+                Tables\Actions\Action::make('createInvoice')
+                    ->label('Create Invoice')
+                    ->icon('heroicon-o-document-chart-bar')
+                    ->color('success')
+                    ->action(function (Transaksi $record) {
+                        $record->load([
+                            'transaksiItem.produk',
+                            'transaksiItem.transaksiItemSpecifications.spesifikasiProduk.spesifikasi',
+                            'transaksiItem.transaksiItemSpecifications.bahan',
+                            'pelanggan',
+                            'vendor'
+                        ]);
+
+                        $pdf = app('dompdf.wrapper')->loadView('pos.print-invoice', ['transaksi' => $record]);
+                        return response()->streamDownload(function () use ($pdf) {
+                            echo $pdf->output();
+                        }, 'invoice-' . $record->id . '.pdf');
+                    })
+                    ->tooltip('Generate Invoice PDF'),
+                Tables\Actions\Action::make('createSpk')
+                    ->label('Create SPK')
+                    ->icon('heroicon-o-document-plus')
+                    ->color('success')
+                    ->action(function (Transaksi $record) {
+                        $record->load([
+                            'transaksiItem.produk',
+                            'transaksiItem.transaksiItemSpecifications.spesifikasiProduk.spesifikasi',
+                            'transaksiItem.transaksiItemSpecifications.bahan',
+                            'pelanggan',
+                            'vendor'
+                        ]);
+
+                        $pdf = Pdf::loadView('pdf.spk', [
+                            'transaksi' => $record
+                        ]);
+
+                        return response()->streamDownload(
+                            fn() => print($pdf->output()),
+                            "spk-{$record->kode}.pdf"
+                        );
+                    })
+                    ->tooltip('Generate SPK PDF'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
