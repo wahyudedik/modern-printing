@@ -79,8 +79,10 @@ class CheckoutController extends Controller
                     $bahan = Bahan::find($spec['bahan_id']);
                     if ($spec['input_type'] === 'number') {
                         $bahan->decrement('stok', $spec['value'] * $item['quantity']);
+                        $bahan->checkStockLevel();
                     } else {
                         $bahan->decrement('stok', $item['quantity']);
+                        $bahan->checkStockLevel();
                     }
                 }
             }

@@ -68,4 +68,11 @@ class Bahan extends BaseModel
                 ->sendToDatabase($this->vendor->members);
         }
     }
+
+    protected static function booted()
+    {
+        static::updated(function ($bahan) {
+            $bahan->checkStockLevel();
+        });
+    }
 }

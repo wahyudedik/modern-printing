@@ -12,6 +12,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Concerns\InteractsWithTable;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 
@@ -53,7 +54,14 @@ class Laporan extends Page implements HasTable
                 ->icon('heroicon-o-printer')
                 ->action(function () {
                     $transactions = Transaksi::query()
-                        ->with(['transaksiItem.produk', 'transaksiItem.bahan', 'pelanggan'])
+                        ->with([
+                            'transaksiItem.produk',
+                            'transaksiItem.transaksiItemSpecifications.spesifikasiProduk.spesifikasi',
+                            'transaksiItem.transaksiItemSpecifications.bahan',
+                            'pelanggan',
+                            'vendor'
+                        ])
+                        ->where('status', 'completed')
                         ->whereBelongsTo(Filament::getTenant())
                         ->when(
                             $this->fromDate,
@@ -82,15 +90,19 @@ class Laporan extends Page implements HasTable
                 ->visible(fn() => $this->fromDate && $this->untilDate),
         ];
     }
-
-
-
     public function table(Table $table): Table
     {
         return $table
             ->query(
                 Transaksi::query()
-                    ->with(['transaksiItem.produk', 'transaksiItem.bahan', 'pelanggan'])
+                    ->with([
+                        'transaksiItem.produk',
+                        'transaksiItem.transaksiItemSpecifications.spesifikasiProduk.spesifikasi',
+                        'transaksiItem.transaksiItemSpecifications.bahan',
+                        'pelanggan',
+                        'vendor'
+                    ])
+                    ->where('status', 'completed')
                     ->whereBelongsTo(Filament::getTenant())
                     ->when(
                         $this->fromDate,
@@ -119,25 +131,56 @@ class Laporan extends Page implements HasTable
                     ->sortable()
                     ->bulleted(),
 
-                TextColumn::make('transaksiItem.bahan.nama_bahan')
-                    ->label('Materials')
+                TextColumn::make('transaksiItem')
+                    ->label('Materials & Specifications')
+                    ->formatStateUsing(function ($state, $record) {
+                        return $record->transaksiItem->map(function ($item) {
+                            $productName = $item->produk->nama_produk;
+                            $specs = $item->transaksiItemSpecifications->map(function ($spec) use ($item) {
+                                $value = $spec->input_type === 'select'
+                                    ? "<span class='font-medium text-primary-600'>{$spec->bahan->nama_bahan}</span>"
+                                    : "<span class='font-medium text-primary-600'>{$spec->value} {$spec->spesifikasiProduk->spesifikasi->satuan}</span>";
+
+                                return "<div class='flex items-center gap-1'>
+                                    <span class='text-gray-600'>{$spec->spesifikasiProduk->spesifikasi->nama_spesifikasi}:</span> 
+                                    {$value} 
+                                    <span class='text-gray-500 text-sm'>(x{$item->kuantitas})</span>
+                                </div>";
+                            })->join("\n");
+
+                            return "<div class='space-y-2'>
+                                <div class='font-semibold text-gray-900'>{$productName} :</div>
+                                <div class='pl-4 space-y-1'>{$specs}</div>
+                            </div>";
+                        })->join("\n<hr class='my-2 border-gray-200'>\n");
+                    })
                     ->listWithLineBreaks()
                     ->searchable()
+                    ->html(),
+
+                TextColumn::make('transaksiItem.kuantitas')
+                    ->label('Product Quantity')
+                    ->summarize(
+                        Sum::make()
+                            ->label('Total Quantity')
+                    )
+                    ->listWithLineBreaks()
+                    ->alignCenter()
                     ->sortable()
-                    ->bulleted(),
+                    ->size('sm')
+                    ->color('primary')
+                    ->tooltip('Total quantity of items ordered')
+                    ->formatStateUsing(fn($state) => number_format($state))
+                    ->icon('heroicon-o-shopping-cart'),
 
                 TextColumn::make('total_harga')
                     ->label('Revenue')
                     ->money('idr')
+                    ->summarize(
+                        Sum::make()
+                            ->label('Total Revenue')
+                    )
                     ->sortable(),
-
-                TextColumn::make('status')
-                    ->badge()
-                    ->colors([
-                        'warning' => 'pending',
-                        'success' => 'success',
-                        'danger' => 'failed'
-                    ]),
 
                 TextColumn::make('payment_method')
                     ->label('Payment')

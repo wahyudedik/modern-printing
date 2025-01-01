@@ -10,10 +10,12 @@
 <p>php artisan shield:super-admin</p>
 
 bug :
-10. kolom transaksis item belum fix yang error edit, lihat dan create
-12. fitur pengurangan stok bahan belum fix
-13. fitur grosir belum fix
-14. fitur aktif dan non aktif akun belum fix
+20. loadingnya lama pada saaat complete order belum fix
+19. cek dan perbaikan plugin theme belum fix
+18. fitur create invoice di transaksi resource belum fix
+16. fitur create spk di transaksi resource belum fix
+14. fitur aktif dan non aktif akun vendor belum fix
+
 
 POS System Flow: 
 1. Perbaikan alur transaksi POS:
