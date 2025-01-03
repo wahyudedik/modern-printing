@@ -92,16 +92,43 @@
 
                                         <!-- Specifications -->
                                         @foreach ($item['specifications'] as $specId => $spec)
+                                            @php
+                                                $spesifikasiProduk = \App\Models\SpesifikasiProduk::with([
+                                                    'spesifikasi',
+                                                    'bahans',
+                                                ])->find($specId);
+                                                $bahan = \App\Models\Bahan::with('wholesalePrice')->find(
+                                                    $spec['bahan_id'],
+                                                );
+                                                $wholesalePrice = new \App\Models\WholesalePrice();
+
+                                                // Calculate price based on input type
+                                                if ($spec['input_type'] === 'select') {
+                                                    $pricePerUnit = $wholesalePrice->calculateFinalPrice(
+                                                        $bahan->hpp,
+                                                        $item['quantity'],
+                                                        $bahan->id,
+                                                    );
+                                                } else {
+                                                    $pricePerUnit = $wholesalePrice->calculateFinalPrice(
+                                                        $bahan->hpp,
+                                                        $spec['value'],
+                                                        $bahan->id,
+                                                    );
+                                                }
+                                            @endphp
                                             <div class="d-flex justify-content-between border-bottom py-2">
                                                 <span class="text-muted">{{ $spec['nama_spesifikasi'] }}</span>
                                                 <span class="fw-medium">
                                                     @if ($spec['input_type'] === 'select')
-                                                        {{ \App\Models\Bahan::find($spec['bahan_id'])->nama_bahan }}
+                                                        {{ $bahan->nama_bahan }}: {{ $item['quantity'] }} x Rp
+                                                        {{ number_format($pricePerUnit, 0, ',', '.') }} = Rp
+                                                        {{ number_format($spec['price'], 0, ',', '.') }}
                                                     @else
-                                                        {{ $spec['value'] }}
-                                                        {{ \App\Models\SpesifikasiProduk::find($specId)->spesifikasi->satuan }}
+                                                        {{ $spec['value'] }} {{ $spesifikasiProduk->spesifikasi->satuan }}
+                                                        x Rp {{ number_format($pricePerUnit, 0, ',', '.') }} = Rp
+                                                        {{ number_format($spec['price'], 0, ',', '.') }}
                                                     @endif
-                                                    : Rp {{ number_format($spec['price'], 0, ',', '.') }}
                                                 </span>
                                             </div>
                                         @endforeach

@@ -46,38 +46,37 @@
                         </div>
                         <!-- Production Details -->
                         <div class="specifications-container">
+
                             <!-- Specifications -->
                             @foreach ($item['specifications'] as $specId => $spec)
-                                @php
-                                    $spesifikasiProduk = \App\Models\SpesifikasiProduk::with([
-                                        'spesifikasi',
-                                        'bahans',
-                                    ])->find($specId);
-                                    $bahan = \App\Models\Bahan::with('wholesalePrice')->find($spec['bahan_id']);
-                                    $wholesalePrice = new \App\Models\WholesalePrice();
-                                    $pricePerUnit = $wholesalePrice->calculateFinalPrice(
-                                        $bahan->hpp,
-                                        $item['quantity'],
-                                        $bahan->id,
-                                    );
-                                @endphp
-                                <div class="d-flex justify-content-between border-bottom py-2">
-                                    <span class="text-muted">
-                                        {{ $spec['nama_spesifikasi'] }}
-                                    </span>
-                                    <span class="fw-medium">
-                                        @if ($spec['input_type'] === 'select')
-                                            {{ $bahan->nama_bahan }}: {{ $item['quantity'] }} x Rp
-                                            {{ number_format($pricePerUnit, 0, ',', '.') }} = Rp
-                                            {{ number_format($spec['price'], 0, ',', '.') }}
-                                        @else
-                                            {{ $spec['value'] }} {{ $spesifikasiProduk->spesifikasi->satuan }} x Rp
-                                            {{ number_format($pricePerUnit, 0, ',', '.') }} = Rp
-                                            {{ number_format($spec['price'], 0, ',', '.') }}
-                                        @endif
-                                    </span>
-                                </div>
-                            @endforeach
+    @php
+        $spesifikasiProduk = \App\Models\SpesifikasiProduk::with([
+            'spesifikasi',
+            'bahans',
+        ])->find($specId);
+        $bahan = \App\Models\Bahan::with('wholesalePrice')->find($spec['bahan_id']);
+        $wholesalePrice = new \App\Models\WholesalePrice();
+        
+        if ($spec['input_type'] === 'select') {
+            $pricePerUnit = $wholesalePrice->calculateFinalPrice($bahan->hpp, $item['quantity'], $bahan->id);
+        } else {
+            $pricePerUnit = $wholesalePrice->calculateFinalPrice($bahan->hpp, $spec['value'], $bahan->id);
+        }
+    @endphp
+    <div class="d-flex justify-content-between border-bottom py-2">
+        <span class="text-muted">
+            {{ $spec['nama_spesifikasi'] }}
+        </span>
+        <span class="fw-medium">
+            @if ($spec['input_type'] === 'select')
+                {{ $bahan->nama_bahan }}: {{ $item['quantity'] }} x Rp {{ number_format($pricePerUnit, 0, ',', '.') }} = Rp {{ number_format($spec['price'], 0, ',', '.') }}
+            @else
+                {{ $spec['value'] }} {{ $spesifikasiProduk->spesifikasi->satuan }} x Rp {{ number_format($pricePerUnit, 0, ',', '.') }} = Rp {{ number_format($spec['price'], 0, ',', '.') }}
+            @endif
+        </span>
+    </div>
+@endforeach
+
 
                             <!-- Production Time -->
                             @php
