@@ -15,9 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
             // \App\Http\Middleware\CheckTenantStatusMiddleware::class,
         ]);
 
-        $middleware->api([]);
+        $middleware->api([
+            //
+        ]);
 
-        $middleware->alias([]);
+        $middleware->alias([
+            //
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

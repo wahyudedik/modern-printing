@@ -3,19 +3,20 @@
 namespace App\Filament\App\Widgets;
 
 use App\Models\Transaksi;
-use Filament\Widgets\ChartWidget;
+use Filament\Facades\Filament;
 use Illuminate\Support\Carbon;
+use Filament\Widgets\ChartWidget;
 
 class DashboardTransaksiChart extends ChartWidget
 {
     protected static ?string $heading = 'Ringkasan Transaksi';
 
-    protected static ?string $pollingInterval = '15s';
+    protected static ?string $pollingInterval = null;
 
     protected static ?int $sort = 2;
 
     protected function getData(): array
-    { 
+    {
         $data = $this->getDailyTransactions();
 
         return [
@@ -50,7 +51,9 @@ class DashboardTransaksiChart extends ChartWidget
             $days->push($date->format('D, d M'));
 
             $transactions->push(
-                Transaksi::whereDate('created_at', $date)->count()
+                Transaksi::whereDate('created_at', $date)
+                    ->where('vendor_id', Filament::getTenant()->id)
+                    ->count()
             );
         }
 
@@ -59,6 +62,7 @@ class DashboardTransaksiChart extends ChartWidget
             'transactions' => $transactions->toArray(),
         ];
     }
+
 
     protected function getType(): string
     {

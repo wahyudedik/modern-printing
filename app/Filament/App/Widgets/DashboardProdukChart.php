@@ -4,6 +4,7 @@ namespace App\Filament\App\Widgets;
 
 use App\Models\Produk;
 use App\Models\TransaksiItem;
+use Filament\Facades\Filament;
 use Illuminate\Support\Carbon;
 use Filament\Widgets\ChartWidget;
 
@@ -11,7 +12,7 @@ class DashboardProdukChart extends ChartWidget
 {
     protected static ?string $heading = 'Produk Terpopuler';
 
-    protected static ?string $pollingInterval = '30s';
+    protected static ?string $pollingInterval = null;
 
     protected static ?int $sort = 3;
 
@@ -72,6 +73,8 @@ class DashboardProdukChart extends ChartWidget
     {
         $topProducts = TransaksiItem::query()
             ->with('produk')
+            ->join('transaksis', 'transaksi_items.transaksi_id', '=', 'transaksis.id')
+            ->where('transaksis.vendor_id', Filament::getTenant()->id)
             ->select('produk_id')
             ->selectRaw('SUM(kuantitas) as total_sold')
             ->groupBy('produk_id')
@@ -84,6 +87,7 @@ class DashboardProdukChart extends ChartWidget
             'quantities' => $topProducts->pluck('total_sold')->toArray(),
         ];
     }
+
 
     protected function getType(): string
     {

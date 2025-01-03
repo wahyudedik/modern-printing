@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Bahan;
 use App\Models\Produk;
 use App\Models\Pelanggan;
@@ -12,7 +13,7 @@ use App\Models\EstimasiProduk;
 use Filament\Facades\Filament;
 use App\Models\SpesifikasiProduk;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use App\Events\VendorActivityEvent;
 use Illuminate\Support\Facades\Auth;
 
 class CheckoutController extends Controller
@@ -56,6 +57,15 @@ class CheckoutController extends Controller
                 'progress_percentage' => 0,
                 'catatan' => $validatedData['catatan']
             ]);
+
+            // For Transactions create event
+            event(new VendorActivityEvent(
+                'transaction_created',
+                $transaksi->toArray(),
+                $vendor->id,
+                Auth::id(),
+                "Transaksi Baru: {$transaksi->kode}"
+            ));
 
             foreach ($cartItems as $item) {
                 $transaksiItem = $transaksi->transaksiItem()->create([

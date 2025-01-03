@@ -13,10 +13,11 @@ bug :
 20. loadingnya lama pada saat complete order belum fix
 19. cek dan perbaikan plugin theme belum fix
 14. fitur aktif dan non aktif akun vendor belum fix
-13. tambah statoverview pada dashboard admin belum fix (total user, total vendor, total produk, total transaksi)
 12. perbaikan vendor aktifity
-11. perbaikan dashboard widget per vendor masih bocor belum fix (semua vendor bisa lihat transaksi)
+11. pencarian n+1 query belum fix
 
+fitur :
+1. fitur vendor activity : alat, produk, bahan - login belum bisa
 
 POS System Flow: 
 1. Perbaikan alur transaksi POS:
@@ -70,35 +71,6 @@ POS System Flow:
     - Optimasi query database
     - Caching pada level aplikasi
     - Monitoring sistem
-
-list :
-
--   [x] 1. Create a new Laravel project
--   [x] 2. Create a new database
--   [x] 3. Configure the database connection in the .env file
--   [x] 4. Create a new migration for the user table
--   [x] 5. Create a new model for the user table
--   [x] 6. Create a homepage
--   [x] 7. install filament
--   [x] 8. install filament panel 'admin' dan 'app'
--   [x] 9. install filament language dan env dan timezone 'id'
--   [x] 10. filament panel app dan admin - login
--   [x] 11. Setting Tenant pada dashboard admin
--   [x] 12. create tenant pada dashboard app
--   [x] 13. install filament shield
--   [x] 14. install filament themes
--   [x] 15. panel app resource user
--   [x] 16. panel app resource role
--   [x] 17. panel app resource permission
--   [x] 18. Resource bahan dan alat
--   [x] 19. Resource produk
--   [x] 20. Resource pelanggan
--   [x] 21. Resource transaksi
--   [x] 22. Resource POS
--   [x] 23. Dashboard app
--   [x] 24. Dashboard admin
--   [x] 25. Relasi Vendor
--   [] 26. perbaikian pos dan databasenya
 
 Berikut perbedaan komponen-komponen Laravel dalam bahasa Indonesia:
 

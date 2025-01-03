@@ -11,7 +11,7 @@ use App\Models\WholesalePrice;
 use Filament\Facades\Filament;
 use App\Models\SpesifikasiProduk;
 
-class PosController extends Controller
+class PosController extends Controller 
 {
     // menampilkan halaman pos
     public function index()

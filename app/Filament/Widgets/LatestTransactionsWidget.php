@@ -11,49 +11,80 @@ use Illuminate\Support\Facades\Auth;
 
 class LatestTransactionsWidget extends BaseWidget
 {
-    protected static ?int $sort = 2;
+    protected static ?string $pollingInterval = null;
+    protected static ?int $sort = 3;
     protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {
         return $table
             ->query(
-                Transaksi::when(Filament::getTenant(), function ($query, $tenant) {
-                    return $query->where('vendor_id', $tenant->id);
-                })
-                    ->latest()
-                    ->limit(5)
-            )
-            ->columns([
+                Transaksi::query()->latest()
+            )->columns([
                 Tables\Columns\TextColumn::make('kode')
-                    ->searchable(),
+                    ->label('Order Code')
+                    ->searchable()
+                    ->copyable()
+                    ->copyMessage('Order code copied')
+                    ->copyMessageDuration(1500),
                 Tables\Columns\TextColumn::make('vendor.name')
-                    ->searchable(),
+                    ->label('Vendor')
+                    ->searchable()
+                    ->tooltip('Vendor providing the service'),
                 Tables\Columns\TextColumn::make('pelanggan.nama')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('total_qty')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Customer')
+                    ->searchable()
+                    ->tooltip('Customer details'),
                 Tables\Columns\TextColumn::make('total_harga')
+                    ->label('Total Price')
                     ->money('IDR')
-                    ->sortable(),
+                    ->sortable()
+                    ->alignment('right')
+                    ->color('success'),
                 Tables\Columns\TextColumn::make('status')
+                    ->badge()
                     ->colors([
-                        'danger' => 'failed',
+                        'danger' => 'cancelled',
                         'warning' => 'pending',
-                        'success' => 'success',
-                    ]),
+                        'info' => 'processing',
+                        'success' => 'completed',
+                        'primary' => 'quality_check'
+                    ])
+                    ->icon(fn(string $state): string => match ($state) {
+                        'cancelled' => 'heroicon-o-x-circle',
+                        'pending' => 'heroicon-o-clock',
+                        'processing' => 'heroicon-o-arrow-path',
+                        'completed' => 'heroicon-o-check-circle',
+                        'quality_check' => 'heroicon-o-magnifying-glass',
+                    }),
+                Tables\Columns\TextColumn::make('progress_percentage')
+                    ->label('Progress')
+                    ->suffix('%')
+                    ->sortable()
+                    ->color(fn(string $state): string => match (true) {
+                        $state >= 80 => 'success',
+                        $state >= 50 => 'warning',
+                        default => 'danger',
+                    })
+                    ->alignment('center'),
+                Tables\Columns\TextColumn::make('estimasi_selesai')
+                    ->label('Est. Completion')
+                    ->date()
+                    ->sortable()
+                    ->tooltip(fn(Transaksi $record): string => 'Created: ' . $record->created_at->format('M d, Y'))
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'pending' => 'Pending',
-                        'success' => 'Success',
-                        'failed' => 'Failed',
-                    ]),
-                Tables\Filters\SelectFilter::make('vendor_id')
-                    ->relationship('vendor', 'name')
+                        'processing' => 'Processing',
+                        'quality_check' => 'Quality Check',
+                        'completed' => 'Completed',
+                        'cancelled' => 'Cancelled'
+                    ])
             ])
-            ->paginated(false);
+            ->defaultSort('created_at', 'desc')
+            ->paginated([10, 25, 50])
+            ->poll('30s');
     }
 }
