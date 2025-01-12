@@ -15,6 +15,7 @@ bug :
 14. fitur aktif dan non aktif akun vendor belum fix
 12. perbaikan vendor aktifity
 11. pencarian n+1 query belum fix
+10. perbaikan gambar pada pos supaya lebih responsive
 
 fitur :
 1. fitur vendor activity : alat, produk, bahan - login belum bisa

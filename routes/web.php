@@ -4,6 +4,7 @@ use App\Livewire\Pos;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PosController;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Middleware\ApplyTenantScopes;
 use Filament\Http\Middleware\Authenticate;
 use App\Http\Controllers\InvoiceController;
@@ -65,3 +66,21 @@ Route::middleware([
     Route::get('/app/{tenant}/pos/invoice/{transaksi}/download', [InvoiceController::class, 'download'])
         ->name('pos.invoice.download');
 });
+
+Route::get('/optimize', function () {
+    Artisan::call('optimize:clear');
+    Artisan::call('optimize');
+    return 'Application cache has been optimized';
+})->name('optimize');
+
+Route::get('/filament-optimize', function () {
+    Artisan::call('filament:upgrade');
+    Artisan::call('filament:clear');
+    Artisan::call('filament:optimize');
+    return 'Filament has been optimized';
+})->name('filament.optimize');
+
+Route::get('/storage-link', function () {
+    Artisan::call('storage:link');
+    return 'Storage has been linked';
+})->name('storage.link');
